@@ -1,8 +1,16 @@
 The following additional provisions apply to jdom.jar third party software
 included as part of this product.
 
+JDom library is used by Abbot library for unit tests only and isn't redistributed with binaries.
 
- $Id$
+JDom library is available at:
+http://www.jdom.org/
+and source code can be downloaded at:
+http://www.jdom.org/dist/binary/jdom-1.1.1.tar.gz
+ 
+ 
+
+$Id$
 
  Copyright (C) 2000-2004 Jason Hunter & Brett McLaughlin.
  All rights reserved.
