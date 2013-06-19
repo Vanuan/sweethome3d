@@ -293,7 +293,7 @@ public class SweetHome3DSWT extends HomeApplication {
       return applicationId;
     } else {
       try {
-        return getUserPreferences().getLocalizedString(SweetHome3DSWT.class, "applicationId");
+        return getUserPreferences().getLocalizedString(SweetHome3D.class, "applicationId");
       } catch (IllegalArgumentException ex) {
         return super.getId();
       }
@@ -305,7 +305,7 @@ public class SweetHome3DSWT extends HomeApplication {
    */
   @Override
   public String getName() {
-    return getUserPreferences().getLocalizedString(SweetHome3DSWT.class, "applicationName");
+    return getUserPreferences().getLocalizedString(SweetHome3D.class, "applicationName");
   }
 
   /**
@@ -316,7 +316,7 @@ public class SweetHome3DSWT extends HomeApplication {
     if (applicationVersion != null) {
       return applicationVersion;
     } else {
-      return getUserPreferences().getLocalizedString(SweetHome3DSWT.class, "applicationVersion");
+      return getUserPreferences().getLocalizedString(SweetHome3D.class, "applicationVersion");
     }
   }
 
@@ -360,7 +360,7 @@ public class SweetHome3DSWT extends HomeApplication {
         System.exit(0);
       } else {
         // Display splash screen
-        SwingTools.showSplashScreenWindow(SweetHome3DSWT.class.getResource("resources/splashScreen.jpg"));
+        SwingTools.showSplashScreenWindow(SweetHome3D.class.getResource("resources/splashScreen.jpg"));
         // Create JNLP services required by Sweet Home 3D
         ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass()));
       }
@@ -485,7 +485,7 @@ public class SweetHome3DSWT extends HomeApplication {
   private void initSystemProperties() {
     if (OperatingSystem.isMacOSX()) {
       // Change Mac OS X application menu name
-      String classPackage = SweetHome3DSWT.class.getName();
+      String classPackage = SweetHome3D.class.getName();
       classPackage = classPackage.substring(0, classPackage.lastIndexOf("."));
       ResourceBundle resource = ResourceBundle.getBundle(classPackage + "." + "package");
       String applicationName = resource.getString("SweetHome3D.applicationName");
@@ -625,8 +625,8 @@ public class SweetHome3DSWT extends HomeApplication {
    */
   private void show3DError() {
     UserPreferences userPreferences = getUserPreferences();
-    String message = userPreferences.getLocalizedString(SweetHome3DSWT.class, "3DError.message");
-    String title = userPreferences.getLocalizedString(SweetHome3DSWT.class, "3DError.title");
+    String message = userPreferences.getLocalizedString(SweetHome3D.class, "3DError.message");
+    String title = userPreferences.getLocalizedString(SweetHome3D.class, "3DError.title");
     JOptionPane.showMessageDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(), message,
         title, JOptionPane.ERROR_MESSAGE);
   }
@@ -638,10 +638,10 @@ public class SweetHome3DSWT extends HomeApplication {
    */
   private boolean confirmSaveAfter3DError() {
     UserPreferences userPreferences = getUserPreferences();
-    String message = userPreferences.getLocalizedString(SweetHome3DSWT.class, "confirmSaveAfter3DError.message");
-    String title = userPreferences.getLocalizedString(SweetHome3DSWT.class, "confirmSaveAfter3DError.title");
-    String save = userPreferences.getLocalizedString(SweetHome3DSWT.class, "confirmSaveAfter3DError.save");
-    String doNotSave = userPreferences.getLocalizedString(SweetHome3DSWT.class, "confirmSaveAfter3DError.doNotSave");
+    String message = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.message");
+    String title = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.title");
+    String save = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.save");
+    String doNotSave = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.doNotSave");
 
     return JOptionPane.showOptionDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(),
         message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object [] {save, doNotSave},
@@ -942,123 +942,5 @@ public class SweetHome3DSWT extends HomeApplication {
     }
   }
 
-  /**
-   * A single instance service server that waits for further Sweet Home 3D
-   * launches.
-   */
-  private static class StandaloneSingleInstanceService implements SingleInstanceService {
-    private static final String                SINGLE_INSTANCE_PORT    = "singleInstancePort";
 
-    private final Class<? extends SweetHome3DSWT> mainClass;
-    private final List<SingleInstanceListener> singleInstanceListeners = new ArrayList<SingleInstanceListener>();
-
-    public StandaloneSingleInstanceService(Class<? extends SweetHome3DSWT> mainClass) {
-      this.mainClass = mainClass;
-    }
-
-    public void addSingleInstanceListener(SingleInstanceListener l) {
-      if (this.singleInstanceListeners.isEmpty()) {
-        if (!OperatingSystem.isMacOSX()) {
-          // Launching a server is useless under Mac OS X because further launches will be notified 
-          // by com.apple.eawt.ApplicationListener added to application in MacOSXConfiguration class
-          launchSingleInstanceServer();
-        }
-      }
-      this.singleInstanceListeners.add(l);
-    }
-
-    /**
-     * Launches single instance server.
-     */
-    private void launchSingleInstanceServer() {
-      final ServerSocket serverSocket;
-      try {
-        // Launch a server that waits for other Sweet Home 3D launches
-        serverSocket = new ServerSocket(0, 0, InetAddress.getByName("127.0.0.1"));
-        // Share server port in preferences
-        Preferences preferences = Preferences.userNodeForPackage(this.mainClass);
-        preferences.putInt(SINGLE_INSTANCE_PORT, serverSocket.getLocalPort());
-        preferences.flush();
-      } catch (IOException ex) {
-        // Ignore exception, Sweet Home 3D will work with multiple instances
-        return;
-      } catch (BackingStoreException ex) {
-        // Ignore exception, Sweet Home 3D will work with multiple instances
-        return;
-      }
-
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
-        public void run() {
-          try {
-            while (true) {
-              // Wait client calls
-              Socket socket = serverSocket.accept();
-              // Read client params
-              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-              String [] params = reader.readLine().split("\t");
-              reader.close();
-              socket.close();
-
-              // Work on a copy of singleInstanceListeners to ensure a listener
-              // can modify safely listeners list
-              SingleInstanceListener [] listeners = singleInstanceListeners
-                  .toArray(new SingleInstanceListener [singleInstanceListeners.size()]);
-              // Call listeners with received params
-              for (SingleInstanceListener listener : listeners) {
-                listener.newActivation(params);
-              }
-            }
-          } catch (IOException ex) {
-            // In case of problem, relaunch server
-            launchSingleInstanceServer();
-          }
-        }
-      });
-    }
-
-    public void removeSingleInstanceListener(SingleInstanceListener l) {
-      this.singleInstanceListeners.remove(l);
-      if (this.singleInstanceListeners.isEmpty()) {
-        Preferences preferences = Preferences.userNodeForPackage(this.mainClass);
-        preferences.remove(SINGLE_INSTANCE_PORT);
-        try {
-          preferences.flush();
-        } catch (BackingStoreException ex) {
-          throw new RuntimeException(ex);
-        }
-      }
-    }
-
-    /**
-     * Returns <code>true</code> if single instance server was successfully
-     * called.
-     */
-    public static boolean callSingleInstanceServer(String [] mainArgs, Class<? extends SweetHome3DSWT> mainClass) {
-      if (!OperatingSystem.isMacOSX()) {
-        // No server under Mac OS X, multiple application launches are managed
-        // by com.apple.eawt.ApplicationListener in MacOSXConfiguration class
-        Preferences preferences = Preferences.userNodeForPackage(mainClass);
-        int singleInstancePort = preferences.getInt(SINGLE_INSTANCE_PORT, -1);
-        if (singleInstancePort != -1) {
-          try {
-            // Try to connect to single instance server
-            Socket socket = new Socket("127.0.0.1", singleInstancePort);
-            // Write main args
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-            for (String arg : mainArgs) {
-              writer.write(arg);
-              writer.write("\t");
-            }
-            writer.write("\n");
-            writer.close();
-            socket.close();
-            return true;
-          } catch (IOException ex) {
-            // Return false
-          }
-        }
-      }
-      return false;
-    }
-  }
 }
