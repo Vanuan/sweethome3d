@@ -27,7 +27,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
 import java.util.ArrayList;
@@ -860,24 +859,7 @@ public class SweetHome3DSWT extends HomeApplication {
     }
 
     public boolean isWebBrowserSupported() {
-      if (OperatingSystem.isJavaVersionGreaterOrEqual("1.6")) {
-        try {
-          // Call Java SE 6 java.awt.Desktop isSupported(Desktop.Action.BROWSE)
-          // method by reflection to ensure Java SE 5 compatibility
-          Class<?> desktopClass = Class.forName("java.awt.Desktop");
-          Object desktopInstance = desktopClass.getMethod("getDesktop").invoke(null);
-          Class<?> desktopActionClass = Class.forName("java.awt.Desktop$Action");
-          Object desktopBrowseAction = desktopActionClass.getMethod("valueOf", String.class).invoke(null, "BROWSE");
-          if ((Boolean)desktopClass.getMethod("isSupported", desktopActionClass).invoke(desktopInstance,
-              desktopBrowseAction)) {
-            return true;
-          }
-        } catch (Exception ex) {
-          // For any exception, let's consider simply the isSupported method failed
-        }
-      }
-      // For other Java versions, let's support Mac OS X and Linux
-      return OperatingSystem.isMacOSX() || OperatingSystem.isLinux();
+      return true;
     }
   }
 
