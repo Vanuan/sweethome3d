@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
 /**
  * Application managing a list of homes displayed at screen.
  * @author Emmanuel Puybaret

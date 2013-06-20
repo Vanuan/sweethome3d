@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="libtest/jnlp.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="lib/linux/i386/swt-4.2.2-gtk-linux-x86.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

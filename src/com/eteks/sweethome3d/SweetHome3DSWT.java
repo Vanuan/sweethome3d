@@ -25,15 +25,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
@@ -46,13 +39,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.jnlp.BasicService;
 import javax.jnlp.ServiceManager;
-import javax.jnlp.ServiceManagerStub;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
@@ -362,7 +353,7 @@ public class SweetHome3DSWT extends HomeApplication {
         // Display splash screen
         SwingTools.showSplashScreenWindow(SweetHome3D.class.getResource("resources/splashScreen.jpg"));
         // Create JNLP services required by Sweet Home 3D
-        ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass()));
+        ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass(), StandaloneBasicServiceSWT.class));
       }
     }
 
@@ -849,66 +840,14 @@ public class SweetHome3DSWT extends HomeApplication {
     }
   }
   
-  /**
-   * JNLP <code>ServiceManagerStub</code> implementation for standalone
-   * applications run out of Java Web Start. This service manager supports
-   * <code>BasicService</code> and <code>javax.jnlp.SingleInstanceService</code>.
-   * .
-   */
-  private static class StandaloneServiceManager implements ServiceManagerStub {
-    private final Class<? extends SweetHome3DSWT> mainClass;
-
-    public StandaloneServiceManager(Class<? extends SweetHome3DSWT> mainClass) {
-      this.mainClass = mainClass;
-    }
-
-    public Object lookup(final String name) throws UnavailableServiceException {
-      if (name.equals("javax.jnlp.BasicService")) {
-        // Create a basic service that uses Java SE 6 java.awt.Desktop class
-        return new StandaloneBasicService();
-      } else if (name.equals("javax.jnlp.SingleInstanceService")) {
-        // Create a server that waits for further Sweet Home 3D launches
-        return new StandaloneSingleInstanceService(this.mainClass);
-      } else {
-        throw new UnavailableServiceException(name);
-      }
-    }
-
-    public String [] getServiceNames() {
-      return new String [] {"javax.jnlp.BasicService", "javax.jnlp.SingleInstanceService"};
-    }
-  }
 
   /**
-   * <code>BasicService</code> that launches web browser either with Java SE 6
-   * <code>java.awt.Desktop</code> class, or with the <code>open</code> command
-   * under Mac OS X.
+   * <code>BasicService</code> that launches web browser with SWT
+   * <code>org.eclipse.swt.program.Program</code> class.
    */
-  private static class StandaloneBasicService implements BasicService {
+  private static class StandaloneBasicServiceSWT implements BasicService {
     public boolean showDocument(URL url) {
-      try {
-        if (OperatingSystem.isJavaVersionGreaterOrEqual("1.6")) {
-          // Call Java SE 6 java.awt.Desktop browse method by reflection to
-          // ensure Java SE 5 compatibility
-          Class<?> desktopClass = Class.forName("java.awt.Desktop");
-          Object desktopInstance = desktopClass.getMethod("getDesktop").invoke(null);
-          desktopClass.getMethod("browse", URI.class).invoke(desktopInstance, url.toURI());
-          return true;
-        }
-      } catch (Exception ex) {
-        try {
-          if (OperatingSystem.isMacOSX()) {
-            Runtime.getRuntime().exec(new String [] {"open", url.toString()});
-            return true;
-          } else if (OperatingSystem.isLinux()) {
-            Runtime.getRuntime().exec(new String [] {"xdg-open", url.toString()});
-            return true;
-          }  
-        } catch (IOException ex2) {
-        }
-        // For other cases, let's consider simply the showDocument method failed
-      }
-      return false;
+      return org.eclipse.swt.program.Program.launch(url.toString());
     }
 
     public URL getCodeBase() {
@@ -941,6 +880,5 @@ public class SweetHome3DSWT extends HomeApplication {
       return OperatingSystem.isMacOSX() || OperatingSystem.isLinux();
     }
   }
-
 
 }
