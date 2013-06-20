@@ -642,7 +642,7 @@ public class SweetHome3DSWT extends HomeApplication {
    * Starts application once initialized and opens home passed in arguments. 
    * This method is executed from Event Dispatch Thread.
    */
-  protected void start(String [] args) {
+  protected void start(final String [] args) {
     if (args.length == 2 && args [0].equals("-open") && args [1].length() > 0) {
       // If requested home is already opened, show it
       for (Home home : getHomes()) {
@@ -652,7 +652,8 @@ public class SweetHome3DSWT extends HomeApplication {
         }
       }
       
-      if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.SWEET_HOME_3D)) {
+      if (getContentManager().isAcceptable(args [1],
+          ContentManager.ContentType.SWEET_HOME_3D)) {
         // Add a listener to application to recover homes once the one in parameter is open
         addHomesListener(new CollectionListener<Home>() {
             public void collectionChanged(CollectionEvent<Home> ev) {
@@ -667,14 +668,12 @@ public class SweetHome3DSWT extends HomeApplication {
         // Read home file in args [1] if args [0] == "-open" with a dummy controller
         createHomeFrameController(createHome()).getHomeController().open(args [1]);
         checkUpdates();
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.LANGUAGE_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String languageLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
+      } else if (getContentManager().isAcceptable(args [1],
+          ContentManager.ContentType.LANGUAGE_LIBRARY)) {
+        (new SH3DOpener() {
+          protected void execute(HomeController homeController, String languageLibraryName) {
+            homeController.importLanguageLibrary(languageLibraryName);
             List<String> supportedLanguages = Arrays.asList(getUserPreferences().getSupportedLanguages());
-            // Import language library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importLanguageLibrary(languageLibraryName);
             // Switch to the first language added to supported languages
             for (String language : getUserPreferences().getSupportedLanguages()) {
               if (!supportedLanguages.contains(language)) {
@@ -682,42 +681,31 @@ public class SweetHome3DSWT extends HomeApplication {
                 break;
               }
             }
-            checkUpdates();
           }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.FURNITURE_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String furnitureLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import furniture library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importFurnitureLibrary(furnitureLibraryName);
-            checkUpdates();
+        }).open(args [1]);
+      } else if (getContentManager().isAcceptable(args [1],
+          ContentManager.ContentType.FURNITURE_LIBRARY)) {
+        (new SH3DOpener() {
+          protected void execute(HomeController homeController, String furnitureLibraryName) {
+            homeController.importFurnitureLibrary(furnitureLibraryName);
           }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.TEXTURES_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String texturesLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import textures library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importTexturesLibrary(texturesLibraryName);
-            checkUpdates();
+        }).open(args [1]);
+      } else if (getContentManager().isAcceptable(args [1],
+          ContentManager.ContentType.TEXTURES_LIBRARY)) {
+        (new SH3DOpener() {
+          protected void execute(HomeController homeController, String texturesLibraryName) {
+            homeController.importTexturesLibrary(texturesLibraryName);
           }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.PLUGIN)) {
-        showDefaultHomeFrame();
-        final String pluginName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import plug-in with a dummy controller
-            HomeController homeController = createHomeFrameController(createHome()).getHomeController();
+        }).open(args [1]);
+      } else if (getContentManager().isAcceptable(args [1],
+          ContentManager.ContentType.PLUGIN)) {
+        (new SH3DOpener() {
+          protected void execute(HomeController homeController, String pluginName) {
             if (homeController instanceof HomePluginController) {
               ((HomePluginController)homeController).importPlugin(pluginName);
             }
-            checkUpdates();
           }
-        });
+        }).open(args [1]);
       }
     } else { 
       showDefaultHomeFrame();
@@ -863,4 +851,19 @@ public class SweetHome3DSWT extends HomeApplication {
     }
   }
 
+  abstract class SH3DOpener {
+    public void open(final String filename) {
+      showDefaultHomeFrame();
+      EventQueue.invokeLater(new Runnable() {
+        public void run() {
+          HomeController homeController = createHomeFrameController(createHome()).getHomeController();
+          execute(homeController, filename);
+          checkUpdates();
+        }
+      });
+    }
+    
+    protected abstract void execute(HomeController homeController, String filename);
+  }
+  
 }
