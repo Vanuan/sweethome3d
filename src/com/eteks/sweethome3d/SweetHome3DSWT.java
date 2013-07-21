@@ -316,14 +316,14 @@ public class SweetHome3DSWT extends HomeApplication {
   /**
    * Returns the frame that displays a given <code>home</code>.
    */
-  Shell getHomeFrame(Home home) {
+  public Shell getHomeFrame(Home home) {
     return this.homeFrames.get(home);
   }
 
   /**
    * Shows and brings to front <code>home</code> frame.
    */
-  private void showHomeFrame(Home home) {
+  protected void showHomeFrame(Home home) {
     final Shell homeFrame = getHomeFrame(home);
     homeFrame.open();
     homeFrame.forceFocus();
@@ -464,14 +464,6 @@ public class SweetHome3DSWT extends HomeApplication {
         SweetHome3DSWT.this.start(args);
 //      }
 //    });
-  }
-
-  /**
-   * Returns a new instance of a home frame controller after <code>home</code>
-   * was created.
-   */
-  protected HomeFrameController createHomeFrameController(Home home) {
-    return new HomeFrameController(home, this, getViewFactory(), getContentManager(), getPluginManager());
   }
 
   /**
@@ -650,7 +642,7 @@ public class SweetHome3DSWT extends HomeApplication {
    * Starts application once initialized and opens home passed in arguments. 
    * This method is executed from Event Dispatch Thread.
    */
-  protected void start(final String [] args) {
+  public void start(final String [] args) {
     if (args.length == 2 && args [0].equals("-open") && args [1].length() > 0) {
       // If requested home is already opened, show it
       for (Home home : getHomes()) {

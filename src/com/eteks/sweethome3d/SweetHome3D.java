@@ -237,7 +237,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns a content manager able to handle files.
    */
-  protected ContentManager getContentManager() {
+  public ContentManager getContentManager() {
     if (this.contentManager == null) {
       this.contentManager = new FileContentManagerWithRecordedLastDirectories(getUserPreferences(), getClass());
     }
@@ -247,7 +247,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns a Swing view factory.
    */
-  protected ViewFactory getViewFactory() {
+  public ViewFactory getViewFactory() {
     if (this.viewFactory == null) {
       this.viewFactory = new SwingViewFactory();
     }
@@ -257,7 +257,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns the plugin manager of this application.
    */
-  protected PluginManager getPluginManager() {
+  public PluginManager getPluginManager() {
     if (!this.pluginManagerInitialized) {
       try {
         UserPreferences userPreferences = getUserPreferences();
@@ -314,15 +314,15 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns the frame that displays a given <code>home</code>.
    */
-  JFrame getHomeFrame(Home home) {
+  public JFrame getHomeFrame(Home home) {
     return this.homeFrames.get(home);
   }
 
   /**
    * Shows and brings to front <code>home</code> frame.
    */
-  private void showHomeFrame(Home home) {
-    final JFrame homeFrame = getHomeFrame(home);
+  protected void showHomeFrame(Home home) {
+    final JFrame homeFrame = (JFrame)getHomeFrame(home);
     homeFrame.setVisible(true);
     homeFrame.setState(JFrame.NORMAL);
     homeFrame.toFront();
@@ -463,14 +463,6 @@ public class SweetHome3D extends HomeApplication {
   }
 
   /**
-   * Returns a new instance of a home frame controller after <code>home</code>
-   * was created.
-   */
-  protected HomeFrameController createHomeFrameController(Home home) {
-    return new HomeFrameController(home, this, getViewFactory(), getContentManager(), getPluginManager());
-  }
-
-  /**
    * Sets various <code>System</code> properties.
    */
   private void initSystemProperties() {
@@ -585,7 +577,7 @@ public class SweetHome3D extends HomeApplication {
         if (home.isModified()) {
           String homeName = home.getName();
           if (homeName == null) {
-            JFrame homeFrame = getHomeFrame(home);
+            JFrame homeFrame = (JFrame) getHomeFrame(home);
             homeFrame.toFront();
             homeName = contentManager.showSaveDialog((View) homeFrame.getRootPane(), null,
                 ContentManager.ContentType.SWEET_HOME_3D, null);
@@ -643,7 +635,7 @@ public class SweetHome3D extends HomeApplication {
    * Starts application once initialized and opens home passed in arguments. 
    * This method is executed from Event Dispatch Thread.
    */
-  protected void start(String [] args) {
+  public void start(String [] args) {
     if (args.length == 2 && args [0].equals("-open") && args [1].length() > 0) {
       // If requested home is already opened, show it
       for (Home home : getHomes()) {
@@ -743,7 +735,7 @@ public class SweetHome3D extends HomeApplication {
       final List<Home> homes = getHomes();
       Home home = null;
       for (int i = homes.size() - 1; i >= 0; i--) {
-        JFrame homeFrame = getHomeFrame(homes.get(i));
+        JFrame homeFrame = (JFrame) getHomeFrame(homes.get(i));
         if (homeFrame.isActive() || homeFrame.getState() != JFrame.ICONIFIED) {
           home = homes.get(i);
           break;
@@ -752,7 +744,7 @@ public class SweetHome3D extends HomeApplication {
       // If no frame is visible and not iconified, take any displayable frame
       if (home == null) {
         for (int i = homes.size() - 1; i >= 0; i--) {
-          JFrame homeFrame = getHomeFrame(homes.get(i));
+          JFrame homeFrame = (JFrame) getHomeFrame(homes.get(i));
           if (homeFrame.isDisplayable()) {
             home = homes.get(i);
             break;

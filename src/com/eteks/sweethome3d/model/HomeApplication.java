@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.eteks.sweethome3d.HomeFrameController;
+import com.eteks.sweethome3d.plugin.PluginManager;
+import com.eteks.sweethome3d.viewcontroller.ContentManager;
+import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
  * Application managing a list of homes displayed at screen.
@@ -132,6 +136,18 @@ public abstract class HomeApplication {
     return "";
   }
 
+  protected abstract ViewFactory getViewFactory();
+
+  /**
+   * Returns a content manager able to handle files.
+   */
+  protected abstract ContentManager getContentManager();
+
+  /**
+   * Returns the plugin manager of this application.
+   */
+  protected abstract PluginManager getPluginManager();
+
   /**
    * Returns the id of this application.
    * Default implementation returns null.
@@ -140,4 +156,34 @@ public abstract class HomeApplication {
   public String getId() {
     return null;
   }
+
+  /**
+   * Returns a new instance of a home frame controller after <code>home</code>
+   * was created.
+   */
+  public HomeFrameController createHomeFrameController(Home home) {
+    return new HomeFrameController(home, this, getViewFactory(), getContentManager(), getPluginManager());
+  }
+
+  /**
+   * Returns the frame that displays a given <code>home</code>.
+   */
+  public Object getHomeFrame(Home home) {
+    return null;
+  }
+
+  /**
+   * Starts application once initialized and opens home passed in arguments. 
+   * This method is executed from the event dispatcher.
+   */
+  public void start(String [] strings) {
+  }
+
+  /**
+   * Shows and brings to front <code>home</code> frame.
+   * @return 
+   */
+  protected void showHomeFrame(Home home) {
+  }
+
 }

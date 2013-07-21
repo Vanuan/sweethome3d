@@ -58,6 +58,7 @@ import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.HomeRecorder;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
+import com.eteks.sweethome3d.plugin.PluginManager;
 import com.eteks.sweethome3d.swing.FileContentManager;
 import com.eteks.sweethome3d.swing.HomePane;
 import com.eteks.sweethome3d.swing.PhotoPanel;
@@ -68,6 +69,7 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.View;
+import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
 /**
  * Tests photo creation dialog.
@@ -95,6 +97,24 @@ public class PhotoCreationTest extends ComponentTestFixture {
         @Override
         public UserPreferences getUserPreferences() {
           return preferences;
+        }
+
+        @Override
+        protected ViewFactory getViewFactory() {
+          // TODO Auto-generated method stub
+          return null;
+        }
+
+        @Override
+        protected ContentManager getContentManager() {
+          // TODO Auto-generated method stub
+          return null;
+        }
+
+        @Override
+        protected PluginManager getPluginManager() {
+          // TODO Auto-generated method stub
+          return null;
         }
       };
     // Create a dummy controller to load a home test file
