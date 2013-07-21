@@ -19,11 +19,13 @@
  */
 package com.eteks.sweethome3d.viewcontroller;
 
+import com.eteks.sweethome3d.HomeFrameController;
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.FurnitureCatalog;
 import com.eteks.sweethome3d.model.Home;
+import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
 
 /**
@@ -234,6 +236,11 @@ public class ViewFactoryAdapter implements ViewFactory {
    * @throws UnsupportedOperationException
    */
   public DialogView createVideoView(Home home, UserPreferences preferences, VideoController videoController) {
+    throw new UnsupportedOperationException();
+  }
+
+  public HomeFrameView createHomeFrameView(Home home, HomeApplication application, ContentManager contentManager,
+                                  HomeFrameController homeFrameController) {
     throw new UnsupportedOperationException();
   }
 }

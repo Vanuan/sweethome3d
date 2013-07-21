@@ -25,6 +25,7 @@ import com.eteks.sweethome3d.plugin.HomePluginController;
 import com.eteks.sweethome3d.plugin.PluginManager;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.Controller;
+import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.View;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
@@ -60,7 +61,8 @@ public class HomeFrameController implements Controller {
   public View getView() {
     // Create view lazily only once it's needed
     if (this.homeFrameView == null) {
-      this.homeFrameView = new HomeFramePane(this.home, this.application, this.contentManager, this);
+      this.homeFrameView = this.viewFactory.createHomeFrameView(this.home,
+          this.application, this.contentManager, this);
     }
     return this.homeFrameView;
   }
@@ -81,6 +83,6 @@ public class HomeFrameController implements Controller {
    * Displays the view controlled by this controller.
    */
   public void displayView() {
-    ((HomeFramePane)getView()).displayView();
+    ((DialogView)getView()).displayView(null);
   }
 }

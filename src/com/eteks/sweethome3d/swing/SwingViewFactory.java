@@ -21,14 +21,18 @@ package com.eteks.sweethome3d.swing;
 
 import java.security.AccessControlException;
 
+import com.eteks.sweethome3d.HomeFrameController;
+import com.eteks.sweethome3d.HomeFramePane;
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CatalogTexture;
 import com.eteks.sweethome3d.model.FurnitureCatalog;
 import com.eteks.sweethome3d.model.Home;
+import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.viewcontroller.BackgroundImageWizardController;
 import com.eteks.sweethome3d.viewcontroller.CompassController;
+import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.FurnitureCatalogController;
 import com.eteks.sweethome3d.viewcontroller.FurnitureController;
@@ -37,6 +41,7 @@ import com.eteks.sweethome3d.viewcontroller.HelpView;
 import com.eteks.sweethome3d.viewcontroller.Home3DAttributesController;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.HomeController3D;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeFurnitureController;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
 import com.eteks.sweethome3d.viewcontroller.ImportedFurnitureWizardController;
@@ -310,5 +315,10 @@ public class SwingViewFactory implements ViewFactory {
   public HelpView createHelpView(UserPreferences preferences,
                                  HelpController helpController) {
     return new HelpPane(preferences, helpController);
+  }
+
+  public HomeFrameView createHomeFrameView(Home home, HomeApplication application, ContentManager contentManager,
+                                  HomeFrameController homeFrameController) {
+    return new HomeFramePane(home, application, contentManager, homeFrameController);
   }
 }

@@ -55,7 +55,9 @@ import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.SwingTools;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
+import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
 import com.eteks.sweethome3d.viewcontroller.View;
 
@@ -64,7 +66,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
  * {@link com.eteks.sweethome3d.swing.HomePane home pane} in a frame.
  * @author Emmanuel Puybaret
  */
-public class HomeFramePane extends JRootPane implements View {
+public class HomeFramePane extends JRootPane implements HomeFrameView {
   private static final String FRAME_X_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameX";
   private static final String FRAME_Y_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameY";
   private static final String FRAME_WIDTH_VISUAL_PROPERTY     = "com.eteks.sweethome3d.SweetHome3D.FrameWidth";
@@ -100,7 +102,7 @@ public class HomeFramePane extends JRootPane implements View {
   /**
    * Builds and shows the frame that displays this pane.
    */
-  public void displayView() {
+  public void displayView(View parentView) {
     JFrame homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
@@ -393,5 +395,9 @@ public class HomeFramePane extends JRootPane implements View {
       }
     }
     frame.setTitle(title);
+  }
+
+  public Object getObject() {
+    return this;
   }
 }

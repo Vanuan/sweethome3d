@@ -19,10 +19,10 @@
  */
 package com.eteks.sweethome3d;
 
-import java.awt.EventQueue;
-import java.awt.KeyboardFocusManager;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+//import java.awt.EventQueue;
+//import java.awt.KeyboardFocusManager;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -46,12 +46,12 @@ import javax.jnlp.ServiceManager;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 import com.eteks.sweethome3d.io.AutoRecoveryManager;
 import com.eteks.sweethome3d.io.FileUserPreferences;
@@ -69,10 +69,11 @@ import com.eteks.sweethome3d.plugin.HomePluginController;
 import com.eteks.sweethome3d.plugin.PluginManager;
 import com.eteks.sweethome3d.swing.FileContentManager;
 import com.eteks.sweethome3d.swing.SwingTools;
-import com.eteks.sweethome3d.swing.SwingViewFactory;
+import com.eteks.sweethome3d.swt.SWTViewFactory;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.View;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
@@ -137,7 +138,8 @@ public class SweetHome3DSWT extends HomeApplication {
   private boolean                 pluginManagerInitialized;
   private boolean                 checkUpdatesNeeded;
   private AutoRecoveryManager     autoRecoveryManager;
-  private final Map<Home, JFrame> homeFrames;
+  private final Map<Home, Shell> homeFrames;
+  private Display display;
 
   /**
    * Creates a home application instance. Recorders, user preferences, content
@@ -145,7 +147,7 @@ public class SweetHome3DSWT extends HomeApplication {
    * lazily instantiated to let subclasses override their creation.
    */
   protected SweetHome3DSWT() {
-    this.homeFrames = new HashMap<Home, JFrame>();
+    this.homeFrames = new HashMap<Home, Shell>();
   }
 
   /**
@@ -198,7 +200,8 @@ public class SweetHome3DSWT extends HomeApplication {
       }
       Executor eventQueueExecutor = new Executor() {
           public void execute(Runnable command) {
-            EventQueue.invokeLater(command);
+            //EventQueue.invokeLater(command);
+            command.run();
           }
         };
       this.userPreferences = new FileUserPreferences(preferencesFolder, applicationFolders, eventQueueExecutor) {
@@ -248,7 +251,7 @@ public class SweetHome3DSWT extends HomeApplication {
    */
   protected ViewFactory getViewFactory() {
     if (this.viewFactory == null) {
-      this.viewFactory = new SwingViewFactory();
+      this.viewFactory = new SWTViewFactory();
     }
     return this.viewFactory;
   }
@@ -313,7 +316,7 @@ public class SweetHome3DSWT extends HomeApplication {
   /**
    * Returns the frame that displays a given <code>home</code>.
    */
-  JFrame getHomeFrame(Home home) {
+  Shell getHomeFrame(Home home) {
     return this.homeFrames.get(home);
   }
 
@@ -321,10 +324,10 @@ public class SweetHome3DSWT extends HomeApplication {
    * Shows and brings to front <code>home</code> frame.
    */
   private void showHomeFrame(Home home) {
-    final JFrame homeFrame = getHomeFrame(home);
-    homeFrame.setVisible(true);
-    homeFrame.setState(JFrame.NORMAL);
-    homeFrame.toFront();
+    final Shell homeFrame = getHomeFrame(home);
+    homeFrame.open();
+    homeFrame.forceFocus();
+    homeFrame.setMaximized(false);
   }
 
   /**
@@ -350,7 +353,7 @@ public class SweetHome3DSWT extends HomeApplication {
         System.exit(0);
       } else {
         // Display splash screen
-        SwingTools.showSplashScreenWindow(SweetHome3D.class.getResource("resources/splashScreen.jpg"));
+        //SwingTools.showSplashScreenWindow(SweetHome3D.class.getResource("resources/splashScreen.jpg"));
         // Create JNLP services required by Sweet Home 3D
         ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass(), StandaloneBasicServiceSWT.class));
       }
@@ -360,11 +363,11 @@ public class SweetHome3DSWT extends HomeApplication {
     final SingleInstanceListener singleInstanceListener = new SingleInstanceListener() {
       public void newActivation(final String [] args) {
         // Call run with the arguments it should have received
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
+//        EventQueue.invokeLater(new Runnable() {
+//          public void run() {
             SweetHome3DSWT.this.start(args);
-          }
-        });
+//          }
+//        });
       }
     };
     try {
@@ -395,7 +398,7 @@ public class SweetHome3DSWT extends HomeApplication {
                 addNewHomeCloseListener(home, controller.getHomeController());
               }
 
-              JFrame homeFrame = (JFrame)SwingUtilities.getRoot((JComponent) controller.getView());
+              Shell homeFrame = (Shell)((HomeFrameView)controller.getView()).getObject();
               homeFrames.put(home, homeFrame);
             } catch (IllegalStateException ex) {
               // Check exception by class name to avoid a mandatory bind to Java 3D
@@ -418,11 +421,11 @@ public class SweetHome3DSWT extends HomeApplication {
                 singleInstanceService.removeSingleInstanceListener(singleInstanceListener);
               }
               // Exit once current events are managed (under Mac OS X, exit is managed by MacOSXConfiguration)
-              EventQueue.invokeLater(new Runnable() {
-                  public void run() {
+//              EventQueue.invokeLater(new Runnable() {
+//                  public void run() {
                     System.exit(0);
-                  }
-                });
+//                  }
+//                });
             }
             break;
         }
@@ -448,17 +451,19 @@ public class SweetHome3DSWT extends HomeApplication {
       // Too bad we can't retrieve homes to recover
       ex.printStackTrace();
     }
+    /*
     if (OperatingSystem.isMacOSX()) {
       // Bind to application menu at last
       MacOSXConfigurationSWT.bindToApplicationMenu(this);
     }
+    */
 
     // Run everything else in Event Dispatch Thread
-    EventQueue.invokeLater(new Runnable() {
-      public void run() {
+//    EventQueue.invokeLater(new Runnable() {
+//      public void run() {
         SweetHome3DSWT.this.start(args);
-      }
-    });
+//      }
+//    });
   }
 
   /**
@@ -551,11 +556,11 @@ public class SweetHome3DSWT extends HomeApplication {
       Component3DManager.getInstance().setRenderingErrorObserver(new Component3DManager.RenderingErrorObserver() {
           public void errorOccured(int errorCode, String errorMessage) {
             System.err.print("Error in Java 3D : " + errorCode + " " + errorMessage);
-            EventQueue.invokeLater(new Runnable() {
-              public void run() {
+//            EventQueue.invokeLater(new Runnable() {
+//              public void run() {
                 exitAfter3DError();
-              }
-            });
+//              }
+//            });
           }
         });
     }
@@ -584,9 +589,9 @@ public class SweetHome3DSWT extends HomeApplication {
         if (home.isModified()) {
           String homeName = home.getName();
           if (homeName == null) {
-            JFrame homeFrame = getHomeFrame(home);
-            homeFrame.toFront();
-            homeName = contentManager.showSaveDialog((View) homeFrame.getRootPane(), null,
+            Shell homeFrame = getHomeFrame(home);
+            homeFrame.forceActive();
+            homeName = contentManager.showSaveDialog((View) homeFrame, null,
                 ContentManager.ContentType.SWEET_HOME_3D, null);
           }
           if (homeName != null) {
@@ -617,8 +622,9 @@ public class SweetHome3DSWT extends HomeApplication {
     UserPreferences userPreferences = getUserPreferences();
     String message = userPreferences.getLocalizedString(SweetHome3D.class, "3DError.message");
     String title = userPreferences.getLocalizedString(SweetHome3D.class, "3DError.title");
-    JOptionPane.showMessageDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(), message,
-        title, JOptionPane.ERROR_MESSAGE);
+    //TODO convert to SWT
+//    JOptionPane.showMessageDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(), message,
+//        title, JOptionPane.ERROR_MESSAGE);
   }
 
   /**
@@ -632,10 +638,12 @@ public class SweetHome3DSWT extends HomeApplication {
     String title = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.title");
     String save = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.save");
     String doNotSave = userPreferences.getLocalizedString(SweetHome3D.class, "confirmSaveAfter3DError.doNotSave");
+    return true;
 
-    return JOptionPane.showOptionDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(),
-        message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object [] {save, doNotSave},
-        save) == JOptionPane.YES_OPTION;
+    // TODO
+//    return JOptionPane.showOptionDialog(KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow(),
+//        message, title, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object [] {save, doNotSave},
+//        save) == JOptionPane.YES_OPTION;
   }
 
   /**
@@ -709,6 +717,17 @@ public class SweetHome3DSWT extends HomeApplication {
       }
     } else { 
       showDefaultHomeFrame();
+      if (this.display == null) {
+        Shell shell = getHomeFrame(null);
+        if (shell != null) {
+          this.display = shell.getDisplay();
+          while(true) {
+            if (!display.readAndDispatch()) {
+              display.sleep();
+            }
+          }
+        }
+      }
       checkUpdates();
     }
   }
@@ -730,8 +749,8 @@ public class SweetHome3DSWT extends HomeApplication {
       final List<Home> homes = getHomes();
       Home home = null;
       for (int i = homes.size() - 1; i >= 0; i--) {
-        JFrame homeFrame = getHomeFrame(homes.get(i));
-        if (homeFrame.isActive() || homeFrame.getState() != JFrame.ICONIFIED) {
+        Shell homeFrame = getHomeFrame(homes.get(i));
+        if (homeFrame.isVisible() || !homeFrame.getMinimized()) {
           home = homes.get(i);
           break;
         }
@@ -739,8 +758,8 @@ public class SweetHome3DSWT extends HomeApplication {
       // If no frame is visible and not iconified, take any displayable frame
       if (home == null) {
         for (int i = homes.size() - 1; i >= 0; i--) {
-          JFrame homeFrame = getHomeFrame(homes.get(i));
-          if (homeFrame.isDisplayable()) {
+          Shell homeFrame = getHomeFrame(homes.get(i));
+          if (homeFrame.isEnabled()) {
             home = homes.get(i);
             break;
           }
@@ -757,14 +776,15 @@ public class SweetHome3DSWT extends HomeApplication {
   private void checkUpdates() {
     if (this.checkUpdatesNeeded) {
       this.checkUpdatesNeeded = false;
+      createHomeFrameController(createHome()).getHomeController().checkUpdates(true);
       // Delay updates checking to let program launch finish
-      new Timer(500, new ActionListener() {
-          public void actionPerformed(ActionEvent ev) {
-            ((Timer)ev.getSource()).stop();
+//      new Timer(500, new ActionListener() {
+//          public void actionPerformed(ActionEvent ev) {
+//            ((Timer)ev.getSource()).stop();
             // Check updates with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().checkUpdates(true);
-          }
-        }).start();
+//            createHomeFrameController(createHome()).getHomeController().checkUpdates(true);
+//          }
+//        }).start();
     }
   }
   
@@ -851,16 +871,16 @@ public class SweetHome3DSWT extends HomeApplication {
     }
   }
 
-  abstract class SH3DOpener {
+  private abstract class SH3DOpener {
     public void open(final String filename) {
       showDefaultHomeFrame();
-      EventQueue.invokeLater(new Runnable() {
-        public void run() {
+//      EventQueue.invokeLater(new Runnable() {
+//        public void run() {
           HomeController homeController = createHomeFrameController(createHome()).getHomeController();
           execute(homeController, filename);
           checkUpdates();
-        }
-      });
+//        }
+//      });
     }
     
     protected abstract void execute(HomeController homeController, String filename);
