@@ -27,6 +27,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
@@ -653,7 +654,10 @@ public class SweetHome3D extends HomeApplication {
    */
   public void start(String [] args) {
     if (args.length == 2 && args [0].equals("-open") && args [1].length() > 0) {
-      openFile(args [1]);
+      // If requested home is already opened, show it
+      if (!showOpenedFrame(args [1])) {
+        openFile(args [1]);
+      }
     } else { 
       showDefaultHomeFrame();
       checkUpdates();
@@ -661,10 +665,8 @@ public class SweetHome3D extends HomeApplication {
   }
 
   private void openFile(String filename) {
-    // If requested home is already opened, show it
-    if (showOpenedFrame(filename)) {
-      // do nothing, already opened
-    } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.SWEET_HOME_3D)) {
+    HomeController homeController = createHomeFrameController(createHome()).getHomeController();
+    if (getContentManager().isAcceptable(filename, ContentManager.ContentType.SWEET_HOME_3D)) {
       // Add a listener to application to recover homes once the one in parameter is open
       addHomesListener(new CollectionListener<Home>() {
           public void collectionChanged(CollectionEvent<Home> ev) {
@@ -676,61 +678,40 @@ public class SweetHome3D extends HomeApplication {
             }
           }
         });
-      // Read home file in args [1] if args [0] == "-open" with a dummy controller
-      createHomeFrameController(createHome()).getHomeController().open(filename);
-      checkUpdates();
+      // Read home file with a dummy controller
+      homeController.open(filename);
     } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.LANGUAGE_LIBRARY)) {
       showDefaultHomeFrame();
       final String languageLibraryName = filename;
-      EventQueue.invokeLater(new Runnable() {
-        public void run() {
-          List<String> supportedLanguages = Arrays.asList(getUserPreferences().getSupportedLanguages());
-          // Import language library with a dummy controller
-          createHomeFrameController(createHome()).getHomeController().importLanguageLibrary(languageLibraryName);
-          // Switch to the first language added to supported languages
-          for (String language : getUserPreferences().getSupportedLanguages()) {
-            if (!supportedLanguages.contains(language)) {
-              getUserPreferences().setLanguage(language);
-              break;
-            }
-          }
-          checkUpdates();
+      List<String> supportedLanguages = Arrays.asList(getUserPreferences().getSupportedLanguages());
+      // Import language library with a dummy controller
+      homeController.importLanguageLibrary(languageLibraryName);
+      // Switch to the first language added to supported languages
+      for (String language : getUserPreferences().getSupportedLanguages()) {
+        if (!supportedLanguages.contains(language)) {
+          getUserPreferences().setLanguage(language);
+          break;
         }
-      });
+      }
     } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.FURNITURE_LIBRARY)) {
       showDefaultHomeFrame();
       final String furnitureLibraryName = filename;
-      EventQueue.invokeLater(new Runnable() {
-        public void run() {
-          // Import furniture library with a dummy controller
-          createHomeFrameController(createHome()).getHomeController().importFurnitureLibrary(furnitureLibraryName);
-          checkUpdates();
-        }
-      });
+      // Import furniture library with a dummy controller
+      homeController.importFurnitureLibrary(furnitureLibraryName);
     } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.TEXTURES_LIBRARY)) {
       showDefaultHomeFrame();
       final String texturesLibraryName = filename;
-      EventQueue.invokeLater(new Runnable() {
-        public void run() {
-          // Import textures library with a dummy controller
-          createHomeFrameController(createHome()).getHomeController().importTexturesLibrary(texturesLibraryName);
-          checkUpdates();
-        }
-      });
+      // Import textures library with a dummy controller
+      createHomeFrameController(createHome()).getHomeController().importTexturesLibrary(texturesLibraryName);
     } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.PLUGIN)) {
       showDefaultHomeFrame();
       final String pluginName = filename;
-      EventQueue.invokeLater(new Runnable() {
-        public void run() {
-          // Import plug-in with a dummy controller
-          HomeController homeController = createHomeFrameController(createHome()).getHomeController();
-          if (homeController instanceof HomePluginController) {
-            ((HomePluginController)homeController).importPlugin(pluginName);
-          }
-          checkUpdates();
-        }
-      });
+      // Import plug-in with a dummy controller
+      if (homeController instanceof HomePluginController) {
+        ((HomePluginController)homeController).importPlugin(pluginName);
+      }
     }
+    checkUpdates();
   }
 
   /**
@@ -908,6 +889,22 @@ public class SweetHome3D extends HomeApplication {
       // For other Java versions, let's support Mac OS X and Linux
       return OperatingSystem.isMacOSX() || OperatingSystem.isLinux();
     }
+  }
+
+  @Override
+  public void syncExec(Runnable runnable) {
+    try{
+      EventQueue.invokeAndWait(runnable);
+    } catch (InvocationTargetException ex) {
+      throw new RuntimeException(ex);
+    } catch (InterruptedException ex) {
+      // Ignore in case of interruption
+    }
+  }
+
+  @Override
+  public void asyncExec(Runnable runnable) {
+    EventQueue.invokeLater(runnable);
   }
 
 }

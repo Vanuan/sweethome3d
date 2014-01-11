@@ -186,4 +186,18 @@ public abstract class HomeApplication {
   protected void showHomeFrame(Home home) {
   }
 
+  /**
+   * Execute from event thread synchronously
+   * AWT's invokeAndWait/SWT's syncExec
+   * @param runnable Runnable to be executed
+   */
+  public abstract void syncExec(Runnable runnable);
+
+  /**
+   * Execute from event thread asynchronously
+   * AWT's invokeLater/SWT's asyncExec
+   * @param runnable Runnable to be executed
+   */
+  public abstract void asyncExec(Runnable runnable);
+
 }

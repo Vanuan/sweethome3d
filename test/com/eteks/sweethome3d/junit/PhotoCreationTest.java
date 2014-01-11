@@ -116,6 +116,18 @@ public class PhotoCreationTest extends ComponentTestFixture {
           // TODO Auto-generated method stub
           return null;
         }
+
+        @Override
+        public void syncExec(Runnable runnable) {
+          // TODO Auto-generated method stub
+          
+        }
+
+        @Override
+        public void asyncExec(Runnable runnable) {
+          // TODO Auto-generated method stub
+          
+        }
       };
     // Create a dummy controller to load a home test file
     HomeController controller = new HomeController(new Home(), application, viewFactory);

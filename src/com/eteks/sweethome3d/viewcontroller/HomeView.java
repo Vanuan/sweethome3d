@@ -282,4 +282,10 @@ public interface HomeView extends View {
    * that manages toolkit events.  
    */
   public abstract void invokeLater(Runnable runnable);
+
+  /**
+   * Returns underlying GUI component
+   * @return
+   */
+  public Object getObject();
 }

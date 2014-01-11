@@ -30,6 +30,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
@@ -282,189 +283,7 @@ public class SWTViewFactory implements ViewFactory {
   public HomeView createHomeView(Home home, UserPreferences preferences,
                                  HomeController homeController) {
     //return new HomePane(home, preferences, homeController);
-    return new HomeView() {
-
-      public void setEnabled(ActionType actionType, boolean enabled) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void setUndoRedoName(String undoText, String redoText) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void setTransferEnabled(boolean enabled) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void detachView(View view) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void attachView(View view) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public String showOpenDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public String showImportLanguageLibraryDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public boolean confirmReplaceLanguageLibrary(String languageLibraryName) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public String showImportFurnitureLibraryDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public boolean confirmReplaceFurnitureLibrary(String furnitureLibraryName) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public String showImportTexturesLibraryDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public boolean confirmReplaceTexturesLibrary(String texturesLibraryName) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public boolean confirmReplacePlugin(String pluginName) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public String showSaveDialog(String homeName) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public SaveAnswer confirmSave(String homeName) {
-        // TODO Auto-generated method stub
-        return SaveAnswer.DO_NOT_SAVE;
-      }
-
-      public boolean confirmSaveNewerHome(String homeName) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public boolean confirmDeleteCatalogSelection() {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public boolean confirmExit() {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public void showError(String message) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public void showMessage(String message) {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public boolean showActionTipMessage(String actionTipKey) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public void showAboutDialog() {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public Callable<Void> showPrintDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public String showPrintToPDFDialog(String homeName) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public void printToPDF(String pdfFile) throws RecorderException {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public String showExportToCSVDialog(String name) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public void exportToCSV(String csvName) throws RecorderException {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public String showExportToSVGDialog(String name) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public void exportToSVG(String svgName) throws RecorderException {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public String showExportToOBJDialog(String homeName) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public void exportToOBJ(String objFile) throws RecorderException {
-        // TODO Auto-generated method stub
-        
-      }
-
-      public String showStoreCameraDialog(String cameraName) {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public List<Camera> showDeletedCamerasDialog() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      public boolean isClipboardEmpty() {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public boolean showUpdatesMessage(String updatesMessage, boolean showOnlyMessage) {
-        // TODO Auto-generated method stub
-        return false;
-      }
-
-      public void invokeLater(Runnable runnable) {
-        // TODO Auto-generated method stub
-        
-      }
-      
-    };
+    return new SwtHomeView(home, preferences, homeController);
   }
 
   /**
@@ -814,8 +633,11 @@ public class SWTViewFactory implements ViewFactory {
     private HomeFrameController controller;
 
     public HomeFrameSWT(HomeFrameController homeFrameController) {
-      this.shell = new Shell();
+      //this.shell = new Shell();
       this.controller = homeFrameController;
+      // Set controller view as a child pane
+      HomeView homeView = this.controller.getHomeController().getView();
+      this.shell = ((Composite)homeView.getObject()).getShell();
     }
     
     public Object getObject() {
@@ -823,40 +645,11 @@ public class SWTViewFactory implements ViewFactory {
     }
     
     public void displayView(View parentView) {
-      this.shell.addShellListener(new ShellListener() {
-
-        public void shellActivated(ShellEvent arg0) {
-          System.out.println("Closed");
-        }
-
-        public void shellClosed(ShellEvent arg0) {
-          @SuppressWarnings("unused")
-          int foo = 0;
-          System.out.println("Closed");
-          controller.getHomeController().close();
-          
-        }
-
-        public void shellDeactivated(ShellEvent arg0) {
-          System.out.println("Closed");
-        }
-
-        public void shellDeiconified(ShellEvent arg0) {
-          System.out.println("Closed");
-        }
-
-        public void shellIconified(ShellEvent arg0) {
-          System.out.println("Closed");
-        }
-      });
       this.shell.addShellListener(new ShellAdapter() {
-        @Override
-        public void shellClosed(ShellEvent e) {
-            e.doit = true;
-            System.out.println("Closed");
+        public void shellClosed(ShellEvent arg0) {
+          controller.getHomeController().close();
         }
       });
-      
       this.shell.open();
     }
     
