@@ -63,4 +63,13 @@ public abstract class HomeFrameView implements DialogView {
   }
 
   protected abstract void setTitle(String title);
+
+  protected void updateFrameImages() {
+    String [] resourceNames = {"/com/eteks/sweethome3d/resources/frameIcon.png",
+        "/com/eteks/sweethome3d/resources/frameIcon32x32.png"};
+    setFrameImages(resourceNames);
+  }
+
+  protected abstract void setFrameImages(String [] resourceNames);
+
 }

@@ -37,6 +37,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -99,16 +100,7 @@ public class HomeFramePane extends HomeFrameView {
       }
     };
     // Update frame image and title 
-    Image [] frameImages = {new ImageIcon(HomeFramePane.class.getResource("/com/eteks/sweethome3d/resources/frameIcon.png")).getImage(),
-                            new ImageIcon(HomeFramePane.class.getResource("/com/eteks/sweethome3d/resources/frameIcon32x32.png")).getImage()};
-    try {
-      // Call Java 1.6 setIconImages by reflection
-      homeFrame.getClass().getMethod("setIconImages", List.class)
-          .invoke(homeFrame, Arrays.asList(frameImages));
-    } catch (Exception ex) {
-      // Call setIconImage available in previous versions
-      homeFrame.setIconImage(frameImages [0]);
-    }
+    updateFrameImages();
     updateFrameTitle();
     // Change component orientation
     rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
@@ -131,6 +123,21 @@ public class HomeFramePane extends HomeFrameView {
     
     // Show frame
     homeFrame.setVisible(true);
+  }
+
+  protected void setFrameImages(String [] resourceNames) {
+    Image [] frameImages = new Image[resourceNames.length];
+    for (int i=0; i<resourceNames.length; ++i) {
+      frameImages[i] = new ImageIcon(HomeFrameView.class.getResource(resourceNames[i])).getImage();
+    }
+    try {
+      // Call Java 1.6 setIconImages by reflection
+      homeFrame.getClass().getMethod("setIconImages", List.class)
+          .invoke(homeFrame, Arrays.asList(frameImages));
+    } catch (Exception ex) {
+      // Call setIconImage available in previous versions
+      homeFrame.setIconImage(frameImages [0]);
+    }
   }
   
   /**

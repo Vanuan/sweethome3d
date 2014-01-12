@@ -2,6 +2,7 @@ package com.eteks.sweethome3d.swt;
 
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
@@ -15,7 +16,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
 
 class HomeFrameSWT extends HomeFrameView {
 
-  private Shell               shell;
+  private Shell shell;
 
   public HomeFrameSWT(Home home, HomeApplication application, ContentManager contentManager,
                       HomeFrameController homeFrameController) {
@@ -36,6 +37,7 @@ class HomeFrameSWT extends HomeFrameView {
       }
     });
     updateFrameTitle();
+    updateFrameImages();
     // TODO Update frame image
     // TODO Change component orientation
     // TODO Compute frame size and location
@@ -53,6 +55,15 @@ class HomeFrameSWT extends HomeFrameView {
   @Override
   protected void setTitle(String title) {
     shell.setText(title);
+  }
+
+  @Override
+  protected void setFrameImages(String [] resourceNames) {
+    Image [] images = new Image [resourceNames.length];
+    for (int i = 0; i < resourceNames.length; ++i) {
+      images [i] = new Image(shell.getDisplay(), HomeFrameSWT.class.getResourceAsStream(resourceNames [i]));
+    }
+    shell.setImages(images);
   }
 
 }
