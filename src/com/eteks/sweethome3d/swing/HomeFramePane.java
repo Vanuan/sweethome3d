@@ -37,7 +37,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -56,10 +55,8 @@ import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
-import com.eteks.sweethome3d.viewcontroller.View;
 
 /**
  * A pane that displays a 
@@ -89,26 +86,13 @@ public class HomeFramePane extends HomeFrameView {
     rootPane.setContentPane((JComponent)homeView);
   }
 
-  /**
-   * Builds and shows the frame that displays this pane.
-   */
-  public void displayView(View parentView) {
-    createHomeFrame();
-    updateFrameImages();
-    updateFrameTitle();
-    setOrientation();
-    computeFrameBounds();
-    enableAutoResize();
-    setMenuMacOs();
-    addListeners();
-    showHomeFrame();
-  }
-
-  private void showHomeFrame() {
+  @Override
+  protected void showHomeFrame() {
     homeFrame.setVisible(true);
   }
 
-  private void createHomeFrame() {
+  @Override
+  protected void createHomeFrame() {
     homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
@@ -120,7 +104,8 @@ public class HomeFramePane extends HomeFrameView {
   /**
    * Enable windows to update their content while window resizing
    */
-  private void enableAutoResize() {
+  @Override
+  protected void enableAutoResize() {
     rootPane.getToolkit().setDynamicLayout(true);
   }
 
@@ -128,11 +113,13 @@ public class HomeFramePane extends HomeFrameView {
    * Set text orientation
    * needed to support Bi-directional text
    */
-  private void setOrientation() {
+  @Override
+  protected void setOrientation() {
     rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
   }
 
-  private void setMenuMacOs() {
+  @Override
+  protected void setMenuMacOs() {
     // The best MVC solution should be to avoid the following statements 
     // but Mac OS X accepts to display the menu bar of a frame in the screen 
     // menu bar only if this menu bar depends directly on its root pane  
@@ -144,6 +131,7 @@ public class HomeFramePane extends HomeFrameView {
     }
   }
 
+  @Override
   protected void setFrameImages(String [] resourceNames) {
     Image [] frameImages = new Image[resourceNames.length];
     for (int i=0; i<resourceNames.length; ++i) {
@@ -162,7 +150,8 @@ public class HomeFramePane extends HomeFrameView {
   /**
    * Adds listeners to <code>frame</code> and model objects.
    */
-  private void addListeners() {
+  @Override
+  protected void addListeners() {
     // Add a listener that keeps track of window location and size
     homeFrame.addComponentListener(new ComponentAdapter() {
         @Override
@@ -285,7 +274,8 @@ public class HomeFramePane extends HomeFrameView {
   /**
    * Computes <code>frame</code> size and location to fit into screen.
    */
-  private void computeFrameBounds() {
+  @Override
+  protected void computeFrameBounds() {
     Integer x = (Integer)home.getVisualProperty(FRAME_X_VISUAL_PROPERTY);
     Integer y = (Integer)home.getVisualProperty(FRAME_Y_VISUAL_PROPERTY);
     Integer width = (Integer)home.getVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY);

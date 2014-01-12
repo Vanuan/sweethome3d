@@ -12,7 +12,7 @@ import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
-import com.eteks.sweethome3d.viewcontroller.View;
+
 
 class HomeFrameSWT extends HomeFrameView {
 
@@ -30,26 +30,47 @@ class HomeFrameSWT extends HomeFrameView {
     return this.shell;
   }
 
-  public void displayView(View parentView) {
+  @Override
+  protected void createHomeFrame() {
+  }
+
+  @Override
+  protected void setMenuMacOs() {
+  }
+
+  @Override
+  protected void enableAutoResize() {
+    // TODO Enable windows to update their content while window resizing
+  }
+
+  @Override
+  protected void setOrientation() {
+    // TODO Change component orientation
+  }
+
+  @Override
+  protected void computeFrameBounds() {
+    // TODO Compute frame size and location
+  }
+
+  @Override
+  protected void showHomeFrame() {
+    this.shell.open();
+  }
+
+  @Override
+  protected void addListeners() {
     this.shell.addShellListener(new ShellAdapter() {
       public void shellClosed(ShellEvent arg0) {
         controller.getHomeController().close();
       }
     });
-    updateFrameTitle();
-    updateFrameImages();
-    // TODO Update frame image
-    // TODO Change component orientation
-    // TODO Compute frame size and location
-    // TODO Enable windows to update their content while window resizing
     // TODO Add a listener that keeps track of window location and size
     // TODO Add a listener to preferences to apply component orientation to
     // frame
     // matching current language
     // TODO Dispose window when a home is deleted
     // TODO Update title when the name or the modified state of home changes
-
-    this.shell.open();
   }
 
   @Override

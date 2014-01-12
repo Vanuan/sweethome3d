@@ -29,6 +29,21 @@ public abstract class HomeFrameView implements DialogView {
   }
 
   /**
+   * Builds and shows the frame that displays this pane.
+   */
+  public void displayView(View parentView) {
+    createHomeFrame();
+    updateFrameImages();
+    updateFrameTitle();
+    setOrientation();
+    computeFrameBounds();
+    enableAutoResize();
+    setMenuMacOs();
+    addListeners();
+    showHomeFrame();
+  }
+
+  /**
    * Updates <code>frame</code> title from <code>home</code> and
    * <code>application</code> name.
    */
@@ -71,5 +86,19 @@ public abstract class HomeFrameView implements DialogView {
   }
 
   protected abstract void setFrameImages(String [] resourceNames);
+
+  protected abstract void showHomeFrame();
+
+  protected abstract void addListeners();
+
+  protected abstract void setMenuMacOs();
+
+  protected abstract void enableAutoResize();
+
+  protected abstract void computeFrameBounds();
+
+  protected abstract void setOrientation();
+
+  protected abstract void createHomeFrame();
 
 }

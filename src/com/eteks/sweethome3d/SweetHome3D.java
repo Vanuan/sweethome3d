@@ -48,14 +48,11 @@ import javax.jnlp.ServiceManager;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
-import org.eclipse.swt.widgets.Shell;
 
 import com.eteks.sweethome3d.io.AutoRecoveryManager;
 import com.eteks.sweethome3d.io.FileUserPreferences;
