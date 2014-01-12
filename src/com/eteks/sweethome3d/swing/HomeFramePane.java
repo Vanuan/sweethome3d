@@ -75,26 +75,13 @@ public class HomeFramePane extends HomeFrameView {
   private static final String SCREEN_WIDTH_VISUAL_PROPERTY    = "com.eteks.sweethome3d.SweetHome3D.ScreenWidth";
   private static final String SCREEN_HEIGHT_VISUAL_PROPERTY   = "com.eteks.sweethome3d.SweetHome3D.ScreenHeight";
   
-  private final Home                    home;
-  private final HomeApplication         application;
-  private final ContentManager          contentManager;
-  private final HomeFrameController     controller;
-  private static int                    newHomeCount;
-  private int                           newHomeNumber;
   JRootPane                             rootPane;
   
   public HomeFramePane(Home home,
                        HomeApplication application,
                        ContentManager contentManager, 
-                       HomeFrameController controller) {
-    this.home = home;
-    this.controller = controller;
-    this.application = application;
-    this.contentManager = contentManager;
-    // If home is unnamed, give it a number
-    if (home.getName() == null) {
-      this.newHomeNumber = ++newHomeCount;
-    }
+                       HomeFrameController homeFrameController) {
+    super(home, application, contentManager, homeFrameController);
     // Set controller view as content pane
     HomeView homeView = this.controller.getHomeController().getView();
     rootPane = new JRootPane();
@@ -401,5 +388,11 @@ public class HomeFramePane extends HomeFrameView {
 
   public Object getObject() {
     return this;
+  }
+
+  @Override
+  protected void setTitle(String title) {
+    // TODO Auto-generated method stub
+    
   }
 }

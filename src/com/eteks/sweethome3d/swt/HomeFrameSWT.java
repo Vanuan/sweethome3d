@@ -16,25 +16,10 @@ import com.eteks.sweethome3d.viewcontroller.View;
 class HomeFrameSWT extends HomeFrameView {
 
   private Shell               shell;
-  private HomeFrameController controller;
-  private Home                home;
-  private HomeApplication     application;
-  private static int          newHomeCount;
-  private int                 newHomeNumber;
-  private ContentManager      contentManager;
 
   public HomeFrameSWT(Home home, HomeApplication application, ContentManager contentManager,
                       HomeFrameController homeFrameController) {
-    // this.shell = new Shell();
-    this.controller = homeFrameController;
-    this.home = home;
-    this.application = application;
-    this.contentManager = contentManager;
-
-    // If home is unnamed, give it a number
-    if (home.getName() == null) {
-      this.newHomeNumber = ++newHomeCount;
-    }
+    super(home, application, contentManager, homeFrameController);
     // Set controller view as a child pane
     HomeView homeView = this.controller.getHomeController().getView();
     this.shell = ((Composite) homeView.getObject()).getShell();
@@ -65,31 +50,8 @@ class HomeFrameSWT extends HomeFrameView {
     this.shell.open();
   }
 
-  /**
-   * Updates <code>frame</code> title from <code>home</code> and
-   * <code>application</code> name.
-   */
-  private void updateFrameTitle() {
-    String homeName = home.getName();
-    String homeDisplayedName;
-    if (homeName == null) {
-      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFrameView.class, "untitled");
-      if (newHomeNumber > 1) {
-        homeDisplayedName += " " + newHomeNumber;
-      }
-    } else {
-      homeDisplayedName = this.contentManager.getPresentationName(homeName, ContentManager.ContentType.SWEET_HOME_3D);
-    }
-
-    if (home.isRecovered()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFrameView.class, "recovered");
-    }
-
-    String title = homeDisplayedName;
-    title += " - " + application.getName();
-    if (home.isModified() || home.isRecovered()) {
-      title = "* " + title;
-    }
+  @Override
+  protected void setTitle(String title) {
     shell.setText(title);
   }
 
