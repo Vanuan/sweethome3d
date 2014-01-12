@@ -66,7 +66,7 @@ import com.eteks.sweethome3d.viewcontroller.View;
  * {@link com.eteks.sweethome3d.swing.HomePane home pane} in a frame.
  * @author Emmanuel Puybaret
  */
-public class HomeFramePane extends JRootPane implements HomeFrameView {
+public class HomeFramePane implements HomeFrameView {
   private static final String FRAME_X_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameX";
   private static final String FRAME_Y_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameY";
   private static final String FRAME_WIDTH_VISUAL_PROPERTY     = "com.eteks.sweethome3d.SweetHome3D.FrameWidth";
@@ -81,6 +81,7 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
   private final HomeFrameController     controller;
   private static int                    newHomeCount;
   private int                           newHomeNumber;
+  JRootPane                             rootPane;
   
   public HomeFramePane(Home home,
                        HomeApplication application,
@@ -96,7 +97,8 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
     }
     // Set controller view as content pane
     HomeView homeView = this.controller.getHomeController().getView();
-    setContentPane((JComponent)homeView);
+    rootPane = new JRootPane();
+    rootPane.setContentPane((JComponent)homeView);
   }
 
   /**
@@ -106,7 +108,7 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
     JFrame homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
-        setRootPane(HomeFramePane.this);
+        setRootPane(HomeFramePane.this.rootPane);
       }
     };
     // Update frame image and title 
@@ -122,18 +124,18 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
     }
     updateFrameTitle(homeFrame, this.home, this.application);
     // Change component orientation
-    applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
+    rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
     // Compute frame size and location
     computeFrameBounds(this.home, homeFrame);
     // Enable windows to update their content while window resizing
-    getToolkit().setDynamicLayout(true); 
+    rootPane.getToolkit().setDynamicLayout(true); 
     // The best MVC solution should be to avoid the following statements 
     // but Mac OS X accepts to display the menu bar of a frame in the screen 
     // menu bar only if this menu bar depends directly on its root pane  
     HomeView homeView = this.controller.getHomeController().getView();
     if (homeView instanceof JRootPane) {
       JRootPane homePane = (JRootPane)homeView;
-      setJMenuBar(homePane.getJMenuBar());
+      rootPane.setJMenuBar(homePane.getJMenuBar());
       homePane.setJMenuBar(null);
     }
     
@@ -329,8 +331,8 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
    * Returns the screen size available to user. 
    */
   private Dimension getUserScreenSize() {
-    Dimension screenSize = getToolkit().getScreenSize();
-    Insets screenInsets = getToolkit().getScreenInsets(getGraphicsConfiguration());
+    Dimension screenSize = rootPane.getToolkit().getScreenSize();
+    Insets screenInsets = rootPane.getToolkit().getScreenInsets(rootPane.getGraphicsConfiguration());
     screenSize.width -= screenInsets.left + screenInsets.right;
     screenSize.height -= screenInsets.top + screenInsets.bottom;
     return screenSize;
@@ -363,16 +365,16 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
       // Use black indicator in close icon for a modified home 
       Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
       // Set Mac OS X 10.4 property for backward compatibility
-      putClientProperty("windowModified", homeModified);
+      rootPane.putClientProperty("windowModified", homeModified);
       
       if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
-        putClientProperty("Window.documentModified", homeModified);
+        rootPane.putClientProperty("Window.documentModified", homeModified);
         
         if (homeName != null) {        
           File homeFile = new File(homeName);
           if (homeFile.exists()) {
             // Update the home icon in window title bar for home files
-            putClientProperty("Window.documentFile", homeFile);
+            rootPane.putClientProperty("Window.documentFile", homeFile);
           }
         }
       }
