@@ -619,7 +619,7 @@ public class SWTViewFactory implements ViewFactory {
                                   HomeFrameController homeFrameController) {
     // TODO Auto-generated method stub
     //return new HomeFramePane(this.home, this.application, this.contentManager, this);
-    return new HomeFrameSWT(homeFrameController);
+    return new HomeFrameSWT(home, application, contentManager, homeFrameController);
     
   }
 }
