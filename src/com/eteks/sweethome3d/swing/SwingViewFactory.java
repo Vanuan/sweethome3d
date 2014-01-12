@@ -22,7 +22,6 @@ package com.eteks.sweethome3d.swing;
 import java.security.AccessControlException;
 
 import com.eteks.sweethome3d.HomeFrameController;
-import com.eteks.sweethome3d.HomeFramePane;
 import com.eteks.sweethome3d.model.BackgroundImage;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.CatalogTexture;

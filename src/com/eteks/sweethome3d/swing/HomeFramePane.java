@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package com.eteks.sweethome3d;
+package com.eteks.sweethome3d.swing;
 
 import java.awt.Component;
 import java.awt.ComponentOrientation;
@@ -47,12 +47,12 @@ import javax.swing.JFrame;
 import javax.swing.JRootPane;
 import javax.swing.Timer;
 
+import com.eteks.sweethome3d.HomeFrameController;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.swing.SwingTools;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.DialogView;
@@ -110,8 +110,8 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
       }
     };
     // Update frame image and title 
-    Image [] frameImages = {new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon.png")).getImage(),
-                            new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon32x32.png")).getImage()};
+    Image [] frameImages = {new ImageIcon(HomeFramePane.class.getResource("/com/eteks/sweethome3d/resources/frameIcon.png")).getImage(),
+                            new ImageIcon(HomeFramePane.class.getResource("/com/eteks/sweethome3d/resources/frameIcon32x32.png")).getImage()};
     try {
       // Call Java 1.6 setIconImages by reflection
       homeFrame.getClass().getMethod("setIconImages", List.class)
@@ -345,7 +345,7 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
     String homeName = home.getName();
     String homeDisplayedName;
     if (homeName == null) {
-      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFramePane.class, "untitled"); 
+      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFrameView.class, "untitled"); 
       if (newHomeNumber > 1) {
         homeDisplayedName += " " + newHomeNumber;
       }
@@ -355,7 +355,7 @@ public class HomeFramePane extends JRootPane implements HomeFrameView {
     }
     
     if (home.isRecovered()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFramePane.class, "recovered");
+      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFrameView.class, "recovered");
     }
     
     String title = homeDisplayedName;

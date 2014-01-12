@@ -78,8 +78,8 @@ public class SwtHomeView implements HomeView {
     for (String [] menuLabels: menus) {
       MenuItem menuHeader = new MenuItem(menuBar, SWT.CASCADE);
       menuHeader.setText(getMenuLabel(menuLabels[0], preferences));
-      Menu fileMenu = new Menu(shell, SWT.DROP_DOWN);
-      menuHeader.setMenu(fileMenu);
+      Menu currentMenu = new Menu(shell, SWT.DROP_DOWN);
+      menuHeader.setMenu(currentMenu);
     }
 //    MenuItem fileMenuHeader = new MenuItem(menuBar, SWT.CASCADE);
 //    Menu fileMenu = new Menu(shell, SWT.DROP_DOWN);
