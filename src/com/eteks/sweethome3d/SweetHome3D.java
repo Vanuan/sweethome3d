@@ -55,6 +55,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
+import org.eclipse.swt.widgets.Shell;
+
 import com.eteks.sweethome3d.io.AutoRecoveryManager;
 import com.eteks.sweethome3d.io.FileUserPreferences;
 import com.eteks.sweethome3d.io.HomeFileRecorder;
@@ -75,6 +77,7 @@ import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.View;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
@@ -397,7 +400,7 @@ public class SweetHome3D extends HomeApplication {
                 addNewHomeCloseListener(home, controller.getHomeController());
               }
 
-              JFrame homeFrame = (JFrame)SwingUtilities.getRoot((JComponent) controller.getView());
+              JFrame homeFrame = (JFrame)((HomeFrameView)controller.getView()).getObject();
               homeFrames.put(home, homeFrame);
             } catch (IllegalStateException ex) {
               // Check exception by class name to avoid a mandatory bind to Java 3D

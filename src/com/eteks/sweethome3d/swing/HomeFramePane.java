@@ -357,7 +357,7 @@ public class HomeFramePane extends HomeFrameView {
   }
 
   public Object getObject() {
-    return this;
+    return homeFrame;
   }
 
   @Override
