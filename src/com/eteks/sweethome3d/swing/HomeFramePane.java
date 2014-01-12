@@ -93,21 +93,46 @@ public class HomeFramePane extends HomeFrameView {
    * Builds and shows the frame that displays this pane.
    */
   public void displayView(View parentView) {
+    createHomeFrame();
+    updateFrameImages();
+    updateFrameTitle();
+    setOrientation();
+    computeFrameBounds();
+    enableAutoResize();
+    setMenuMacOs();
+    addListeners();
+    showHomeFrame();
+  }
+
+  private void showHomeFrame() {
+    homeFrame.setVisible(true);
+  }
+
+  private void createHomeFrame() {
     homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
         setRootPane(HomeFramePane.this.rootPane);
       }
     };
-    // Update frame image and title 
-    updateFrameImages();
-    updateFrameTitle();
-    // Change component orientation
-    rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
-    // Compute frame size and location
-    computeFrameBounds(this.home, homeFrame);
-    // Enable windows to update their content while window resizing
-    rootPane.getToolkit().setDynamicLayout(true); 
+  }
+
+  /**
+   * Enable windows to update their content while window resizing
+   */
+  private void enableAutoResize() {
+    rootPane.getToolkit().setDynamicLayout(true);
+  }
+
+  /**
+   * Set text orientation
+   * needed to support Bi-directional text
+   */
+  private void setOrientation() {
+    rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
+  }
+
+  private void setMenuMacOs() {
     // The best MVC solution should be to avoid the following statements 
     // but Mac OS X accepts to display the menu bar of a frame in the screen 
     // menu bar only if this menu bar depends directly on its root pane  
@@ -117,12 +142,6 @@ public class HomeFramePane extends HomeFrameView {
       rootPane.setJMenuBar(homePane.getJMenuBar());
       homePane.setJMenuBar(null);
     }
-    
-    // Add listeners to model and frame    
-    addListeners(this.home, this.application, this.controller.getHomeController(), homeFrame);
-    
-    // Show frame
-    homeFrame.setVisible(true);
   }
 
   protected void setFrameImages(String [] resourceNames) {
@@ -143,47 +162,45 @@ public class HomeFramePane extends HomeFrameView {
   /**
    * Adds listeners to <code>frame</code> and model objects.
    */
-  private void addListeners(final Home home,
-                            final HomeApplication application,
-                            final HomeController controller,
-                            final JFrame frame) {
+  private void addListeners() {
     // Add a listener that keeps track of window location and size
-    frame.addComponentListener(new ComponentAdapter() {
+    homeFrame.addComponentListener(new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent ev) {
           // Store new size only if frame isn't maximized
-          if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
-            controller.setVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY, frame.getWidth());
-            controller.setVisualProperty(FRAME_HEIGHT_VISUAL_PROPERTY, frame.getHeight());
+          if ((homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+            controller.getHomeController().setVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY, homeFrame.getWidth());
+            controller.getHomeController().setVisualProperty(FRAME_HEIGHT_VISUAL_PROPERTY, homeFrame.getHeight());
           }
+
           Dimension userScreenSize = getUserScreenSize();
-          controller.setVisualProperty(SCREEN_WIDTH_VISUAL_PROPERTY, userScreenSize.width);
-          controller.setVisualProperty(SCREEN_HEIGHT_VISUAL_PROPERTY, userScreenSize.height);
+          controller.getHomeController().setVisualProperty(SCREEN_WIDTH_VISUAL_PROPERTY, userScreenSize.width);
+          controller.getHomeController().setVisualProperty(SCREEN_HEIGHT_VISUAL_PROPERTY, userScreenSize.height);
         }
         
         @Override
         public void componentMoved(ComponentEvent ev) {
           // Store new location only if frame isn't maximized
-          if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
-            controller.setVisualProperty(FRAME_X_VISUAL_PROPERTY, frame.getX());
-            controller.setVisualProperty(FRAME_Y_VISUAL_PROPERTY, frame.getY());
+          if ((homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+            controller.getHomeController().setVisualProperty(FRAME_X_VISUAL_PROPERTY, homeFrame.getX());
+            controller.getHomeController().setVisualProperty(FRAME_Y_VISUAL_PROPERTY, homeFrame.getY());
           }
         }
       });
     // Control frame closing and activation 
-    frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    homeFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     WindowAdapter windowListener = new WindowAdapter () {
         private Component mostRecentFocusOwner;
 
         @Override
         public void windowStateChanged(WindowEvent ev) {
-          controller.setVisualProperty(FRAME_MAXIMIZED_VISUAL_PROPERTY, 
-              (frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH);
+          controller.getHomeController().setVisualProperty(FRAME_MAXIMIZED_VISUAL_PROPERTY, 
+              (homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH);
         }
         
         @Override
         public void windowClosing(WindowEvent ev) {
-          controller.close();
+          controller.getHomeController().close();
         }
         
         @Override
@@ -192,7 +209,7 @@ public class HomeFramePane extends HomeFrameView {
           // while canvases 3D are created in a child modal dialog like the one managing 
           // ImportedFurnitureWizardStepsPanel. As this makes Swing loose the most recent focus owner
           // let's store it in a field to use it when this frame will be reactivated. 
-          Component mostRecentFocusOwner = frame.getMostRecentFocusOwner();          
+          Component mostRecentFocusOwner = homeFrame.getMostRecentFocusOwner();          
           if (!(mostRecentFocusOwner instanceof JFrame)
               && mostRecentFocusOwner != null) {
             this.mostRecentFocusOwner = mostRecentFocusOwner;
@@ -212,18 +229,18 @@ public class HomeFramePane extends HomeFrameView {
           }
         } 
       };
-    frame.addWindowListener(windowListener);    
-    frame.addWindowStateListener(windowListener);    
+    homeFrame.addWindowListener(windowListener);
+    homeFrame.addWindowStateListener(windowListener);
     // Add a listener to preferences to apply component orientation to frame matching current language
     application.getUserPreferences().addPropertyChangeListener(UserPreferences.Property.LANGUAGE, 
-        new LanguageChangeListener(frame, this));
+        new LanguageChangeListener(homeFrame, this));
     // Dispose window when a home is deleted 
     application.addHomesListener(new CollectionListener<Home>() {
         public void collectionChanged(CollectionEvent<Home> ev) {
           if (ev.getItem() == home
               && ev.getType() == CollectionEvent.Type.DELETE) {
             application.removeHomesListener(this);
-            frame.dispose();
+            homeFrame.dispose();
           }
         };
       });
@@ -268,7 +285,7 @@ public class HomeFramePane extends HomeFrameView {
   /**
    * Computes <code>frame</code> size and location to fit into screen.
    */
-  private void computeFrameBounds(Home home, final JFrame frame) {
+  private void computeFrameBounds() {
     Integer x = (Integer)home.getVisualProperty(FRAME_X_VISUAL_PROPERTY);
     Integer y = (Integer)home.getVisualProperty(FRAME_Y_VISUAL_PROPERTY);
     Integer width = (Integer)home.getVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY);
@@ -287,37 +304,37 @@ public class HomeFramePane extends HomeFrameView {
       final Rectangle frameBounds = new Rectangle(x, y, width, height);
       if (maximized != null && maximized) {
         // Display first the frame at its maximum size to keep splitters location 
-        Insets insets = frame.getInsets();
-        frame.setSize(screenSize.width + insets.left + insets.right, 
+        Insets insets = homeFrame.getInsets();
+        homeFrame.setSize(screenSize.width + insets.left + insets.right,
             screenSize.height + insets.bottom);
         EventQueue.invokeLater(new Runnable() {
             public void run() {
               // Resize to home non maximized bounds
-              frame.setBounds(frameBounds);
+              homeFrame.setBounds(frameBounds);
               // Finally maximize
               if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
                 new Timer(200, new ActionListener() {
                     public void actionPerformed(ActionEvent ev) {
                       // Maximize later otherwise it won't be taken into account
                       ((Timer)ev.getSource()).stop();
-                      frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                      homeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                     }
                   }).start();
               } else {
-                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                homeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
               }
             }
           });
       } else {
         // Reuse home bounds
-        frame.setBounds(frameBounds);
-        frame.setLocationByPlatform(!SwingTools.isRectangleVisibleAtScreen(frameBounds));
+        homeFrame.setBounds(frameBounds);
+        homeFrame.setLocationByPlatform(!SwingTools.isRectangleVisibleAtScreen(frameBounds));
       }
     } else {      
-      frame.setLocationByPlatform(true);
-      frame.pack();
-      frame.setSize(Math.min(screenSize.width * 4 / 5, frame.getWidth()), 
-              Math.min(screenSize.height * 4 / 5, frame.getHeight()));
+      homeFrame.setLocationByPlatform(true);
+      homeFrame.pack();
+      homeFrame.setSize(Math.min(screenSize.width * 4 / 5, homeFrame.getWidth()), 
+              Math.min(screenSize.height * 4 / 5, homeFrame.getHeight()));
     }
   }
 
