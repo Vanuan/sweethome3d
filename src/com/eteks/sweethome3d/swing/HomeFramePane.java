@@ -55,7 +55,6 @@ import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.DialogView;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
 import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
@@ -76,6 +75,7 @@ public class HomeFramePane extends HomeFrameView {
   private static final String SCREEN_HEIGHT_VISUAL_PROPERTY   = "com.eteks.sweethome3d.SweetHome3D.ScreenHeight";
   
   JRootPane                             rootPane;
+  JFrame                                homeFrame;
   
   public HomeFramePane(Home home,
                        HomeApplication application,
@@ -92,7 +92,7 @@ public class HomeFramePane extends HomeFrameView {
    * Builds and shows the frame that displays this pane.
    */
   public void displayView(View parentView) {
-    JFrame homeFrame = new JFrame() {
+    homeFrame = new JFrame() {
       {
         // Replace frame rootPane by home controller view
         setRootPane(HomeFramePane.this.rootPane);
@@ -109,7 +109,7 @@ public class HomeFramePane extends HomeFrameView {
       // Call setIconImage available in previous versions
       homeFrame.setIconImage(frameImages [0]);
     }
-    updateFrameTitle(homeFrame, this.home, this.application);
+    updateFrameTitle();
     // Change component orientation
     rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
     // Compute frame size and location
@@ -223,7 +223,7 @@ public class HomeFramePane extends HomeFrameView {
     // Update title when the name or the modified state of home changes
     PropertyChangeListener frameTitleChangeListener = new PropertyChangeListener () {
         public void propertyChange(PropertyChangeEvent ev) {
-          updateFrameTitle(frame, home, application);
+          updateFrameTitle();
         }
       };
     home.addPropertyChangeListener(Home.Property.NAME, frameTitleChangeListener);
@@ -253,7 +253,7 @@ public class HomeFramePane extends HomeFrameView {
             UserPreferences.Property.LANGUAGE, this);
       } else {
         this.frame.get().applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
-        homeFramePane.updateFrameTitle(this.frame.get(), homeFramePane.home, homeFramePane.application);
+        homeFramePane.updateFrameTitle();
       }
     }
   }
@@ -325,65 +325,35 @@ public class HomeFramePane extends HomeFrameView {
     return screenSize;
   }
   
-  /**
-   * Updates <code>frame</code> title from <code>home</code> and <code>application</code> name.
-   */
-  private void updateFrameTitle(JFrame frame, 
-                                Home home,
-                                HomeApplication application) {
-    String homeName = home.getName();
-    String homeDisplayedName;
-    if (homeName == null) {
-      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFrameView.class, "untitled"); 
-      if (newHomeNumber > 1) {
-        homeDisplayedName += " " + newHomeNumber;
-      }
-    } else {
-      homeDisplayedName = this.contentManager.getPresentationName(
-          homeName, ContentManager.ContentType.SWEET_HOME_3D);
-    }
+  protected void updateMacOsTitle(String homeName) {
+    // Use black indicator in close icon for a modified home 
+    Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
+    // Set Mac OS X 10.4 property for backward compatibility
+    rootPane.putClientProperty("windowModified", homeModified);
     
-    if (home.isRecovered()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFrameView.class, "recovered");
-    }
-    
-    String title = homeDisplayedName;
-    if (OperatingSystem.isMacOSX()) {
-      // Use black indicator in close icon for a modified home 
-      Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
-      // Set Mac OS X 10.4 property for backward compatibility
-      rootPane.putClientProperty("windowModified", homeModified);
+    if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
+      rootPane.putClientProperty("Window.documentModified", homeModified);
       
-      if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
-        rootPane.putClientProperty("Window.documentModified", homeModified);
-        
-        if (homeName != null) {        
-          File homeFile = new File(homeName);
-          if (homeFile.exists()) {
-            // Update the home icon in window title bar for home files
-            rootPane.putClientProperty("Window.documentFile", homeFile);
-          }
+      if (homeName != null) {        
+        File homeFile = new File(homeName);
+        if (homeFile.exists()) {
+          // Update the home icon in window title bar for home files
+          rootPane.putClientProperty("Window.documentFile", homeFile);
         }
-      }
-
-      if (!frame.isVisible() 
-          && OperatingSystem.isMacOSXLionOrSuperior()) {
-        try {
-          // Call Mac OS X specific FullScreenUtilities.setWindowCanFullScreen(homeFrame, true) by reflection 
-          Class.forName("com.apple.eawt.FullScreenUtilities").
-              getMethod("setWindowCanFullScreen", new Class<?> [] {Window.class, boolean.class}).
-              invoke(null, frame, true);
-        } catch (Exception ex) {
-          // Full screen mode is not supported
-        }
-      }
-    } else {
-      title += " - " + application.getName(); 
-      if (home.isModified() || home.isRecovered()) {
-        title = "* " + title;
       }
     }
-    frame.setTitle(title);
+
+    if (!homeFrame.isVisible() 
+        && OperatingSystem.isMacOSXLionOrSuperior()) {
+      try {
+        // Call Mac OS X specific FullScreenUtilities.setWindowCanFullScreen(homeFrame, true) by reflection 
+        Class.forName("com.apple.eawt.FullScreenUtilities").
+            getMethod("setWindowCanFullScreen", new Class<?> [] {Window.class, boolean.class}).
+            invoke(null, homeFrame, true);
+      } catch (Exception ex) {
+        // Full screen mode is not supported
+      }
+    }
   }
 
   public Object getObject() {
@@ -392,7 +362,6 @@ public class HomeFramePane extends HomeFrameView {
 
   @Override
   protected void setTitle(String title) {
-    // TODO Auto-generated method stub
-    
+    homeFrame.setTitle(title);
   }
 }

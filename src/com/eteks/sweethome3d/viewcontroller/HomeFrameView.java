@@ -3,6 +3,7 @@ package com.eteks.sweethome3d.viewcontroller;
 import com.eteks.sweethome3d.HomeFrameController;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
+import com.eteks.sweethome3d.tools.OperatingSystem;
 
 public abstract class HomeFrameView implements DialogView {
   protected HomeFrameController controller;
@@ -46,13 +47,19 @@ public abstract class HomeFrameView implements DialogView {
     if (home.isRecovered()) {
       homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFrameView.class, "recovered");
     }
-
     String title = homeDisplayedName;
-    title += " - " + application.getName();
-    if (home.isModified() || home.isRecovered()) {
-      title = "* " + title;
+    if (OperatingSystem.isMacOSX()) {
+      updateMacOsTitle(homeName);
+    } else {
+      title += " - " + application.getName();
+      if (home.isModified() || home.isRecovered()) {
+        title = "* " + title;
+      }
     }
     setTitle(title);
+  }
+
+  protected void updateMacOsTitle(String homeName) {
   }
 
   protected abstract void setTitle(String title);
