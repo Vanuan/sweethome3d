@@ -13,7 +13,7 @@ import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
 import com.eteks.sweethome3d.viewcontroller.View;
 
-class HomeFrameSWT implements HomeFrameView {
+class HomeFrameSWT extends HomeFrameView {
 
   private Shell               shell;
   private HomeFrameController controller;
