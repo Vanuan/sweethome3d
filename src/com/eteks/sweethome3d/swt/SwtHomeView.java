@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 
 import com.eteks.sweethome3d.model.Camera;
 import com.eteks.sweethome3d.model.Home;
@@ -26,7 +29,7 @@ public class SwtHomeView implements HomeView {
     composite = new Composite(shell, 0);
     Menu menu = createMenuBar(shell, preferences);
     shell.setMenuBar(menu);
-    createToolBar();
+    createToolBar(shell, preferences);
     createMainPane();
   }
 
@@ -35,9 +38,66 @@ public class SwtHomeView implements HomeView {
 
   }
 
-  private void createToolBar() {
-    // TODO Auto-generated method stub
+  private void createToolBar(Shell shell, UserPreferences preferences) {
+    AbstractMenuItem [] toolbarInfo = new AbstractMenuItem [] {
+      new AbstractMenuItem(Constants.NEW_HOME),
+      new AbstractMenuItem(Constants.OPEN),
+      new AbstractMenuItem(Constants.SAVE),
+      new AbstractMenuItem(Constants.PREFERENCES),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.UNDO),
+      new AbstractMenuItem(Constants.REDO),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.CUT),
+      new AbstractMenuItem(Constants.COPY),
+      new AbstractMenuItem(Constants.PASTE),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.ADD_HOME_FURNITURE),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.SELECT),
+      new AbstractMenuItem(Constants.PAN),
+      new AbstractMenuItem(Constants.CREATE_WALLS),
+      new AbstractMenuItem(Constants.CREATE_ROOMS),
+      new AbstractMenuItem(Constants.CREATE_DIMENSION_LINES),
+      new AbstractMenuItem(Constants.CREATE_LABELS),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.INCREASE_TEXT_SIZE),
+      new AbstractMenuItem(Constants.DECREASE_TEXT_SIZE),
+      new AbstractMenuItem(Constants.TOGGLE_BOLD_STYLE),
+      new AbstractMenuItem(Constants.TOGGLE_ITALIC_STYLE),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.ZOOM_IN),
+      new AbstractMenuItem(Constants.ZOOM_OUT),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.CREATE_PHOTO),
+      new AbstractMenuItem(Constants.CREATE_VIDEO),
+      new AbstractMenuItem(),
+      new AbstractMenuItem(Constants.HELP),
+    };
+    ToolBar toolBar = new ToolBar (shell, SWT.FLAT | SWT.BORDER | SWT.NO_FOCUS);
+    //Rectangle clientArea = shell.getClientArea ();
+    //toolBar.setLocation(clientArea.x, clientArea.y);
+    for (int i = 0; i < toolbarInfo.length; ++i) {
+      String key = toolbarInfo[i].getId();
+      if (key != null) {
+        ToolItem item = new ToolItem(toolBar, SWT.PUSH);
+        Image image = getIcon(shell, preferences, key);
+        item.setImage(image);
+      } else {
+        new ToolItem(toolBar, SWT.SEPARATOR);
+      }
+    }
+    toolBar.pack ();
+  }
 
+  private Image getIcon(Shell shell, UserPreferences preferences, String key) {
+    try {
+      String imgPath = "/com/eteks/sweethome3d/swing/" + preferences.getLocalizedString(HomePane.class, key + ".SmallIcon");
+      Image image = new Image(shell.getDisplay(), HomeFrameSWT.class.getResourceAsStream(imgPath));
+      return image;
+    } catch(IllegalArgumentException e) {
+      return null;
+    }
   }
 
   private static String getMenuLabel(String key, UserPreferences preferences) {
@@ -76,6 +136,10 @@ public class SwtHomeView implements HomeView {
         menuHeader = new MenuItem(menuBar, SWT.PUSH);
       }
       menuHeader.setText(getMenuLabel(menuName, preferences));
+      Image image = getIcon(shell, preferences, menuName);
+      if(image != null) {
+        menuHeader.setImage(image);
+      }
     }
     else {
       new MenuItem(menuBar, SWT.SEPARATOR);
