@@ -4,8 +4,13 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
@@ -26,16 +31,52 @@ public class SwtHomeView implements HomeView {
 
   SwtHomeView(Home home, UserPreferences preferences, HomeController homeController) {
     Shell shell = new Shell();
-    composite = new Composite(shell, 0);
+
     Menu menu = createMenuBar(shell, preferences);
     shell.setMenuBar(menu);
     createToolBar(shell, preferences);
-    createMainPane();
+
+    GridLayout gridLayout = new GridLayout();
+    shell.setLayout(gridLayout);
+    composite = new Composite(shell, SWT.NONE);
+    composite.setLayout (new FillLayout());
+    GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
+    composite.setLayoutData(gridData);
+
+    createMainPane(composite);
   }
 
-  private void createMainPane() {
-    // TODO Auto-generated method stub
+  private void createMainPane(Composite composite) {
+    SashForm form = new SashForm(composite, SWT.HORIZONTAL);
+    form.setLayout(new FillLayout());
 
+    // catalog furniture
+    Composite furniturePane = new Composite(form, SWT.NONE);
+    furniturePane.setLayout(new FillLayout());
+    SashForm furnitureForm = new SashForm(furniturePane, SWT.VERTICAL);
+    furnitureForm.setLayout(new FillLayout());
+    // furniture catalog
+    Composite furnitureCatalogPane = new Composite(furnitureForm, SWT.BORDER);
+    furnitureCatalogPane.setLayout(new FillLayout());
+    new Label(furnitureCatalogPane, SWT.CENTER).setText("Furniture catalog pane");
+    // furniture filter
+    Composite furnitureFilterPane = new Composite(furnitureForm, SWT.BORDER);
+    furnitureFilterPane.setLayout(new FillLayout());
+    new Label(furnitureFilterPane, SWT.CENTER).setText("Furniture filter pane");
+
+    // plan view 3d
+    Composite planPane = new Composite(form, SWT.NONE);
+    planPane.setLayout(new FillLayout());
+    SashForm planForm = new SashForm(planPane, SWT.VERTICAL);
+    planForm.setLayout(new FillLayout());
+    // 2d
+    Composite plan2DPane = new Composite(planForm, SWT.BORDER);
+    plan2DPane.setLayout(new FillLayout());
+    new Label(plan2DPane, SWT.CENTER).setText("Plan 2D");
+    // 3d
+    Composite plan3DPane = new Composite(planForm, SWT.BORDER);
+    plan3DPane.setLayout(new FillLayout());
+    new Label(plan3DPane, SWT.CENTER).setText("Plan 3D");
   }
 
   private void createToolBar(Shell shell, UserPreferences preferences) {
