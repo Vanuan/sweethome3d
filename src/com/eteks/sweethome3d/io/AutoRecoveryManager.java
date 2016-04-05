@@ -19,14 +19,12 @@
  */
 package com.eteks.sweethome3d.io;
 
-import java.awt.EventQueue;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.OverlappingFileLockException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -255,31 +253,25 @@ public class AutoRecoveryManager {
    * Clones application homes and saves them in automatic save executor.
    */
   private void cloneAndSaveHomes() {
-    try {
-      EventQueue.invokeAndWait(new Runnable() {
-          public void run() {
-            // Handle and clone application homes in Event Dispatch Thread
-            for (final Home home : application.getHomes()) {
-              final Home autoSavedHome = home.clone();
-              final HomeRecorder homeRecorder = application.getHomeRecorder();
-              autoSaveForRecoveryExecutor.submit(new Runnable() {
-                public void run() {
-                  try {
-                    // Save home clone in an other thread
-                    saveHome(home, autoSavedHome, homeRecorder);
-                  } catch (RecorderException ex) {
-                    ex.printStackTrace();
-                  }
+    application.syncExec(new Runnable() {
+        public void run() {
+          // Handle and clone application homes in Event Dispatch Thread
+          for (final Home home : application.getHomes()) {
+            final Home autoSavedHome = home.clone();
+            final HomeRecorder homeRecorder = application.getHomeRecorder();
+            autoSaveForRecoveryExecutor.submit(new Runnable() {
+              public void run() {
+                try {
+                  // Save home clone in an other thread
+                  saveHome(home, autoSavedHome, homeRecorder);
+                } catch (RecorderException ex) {
+                  ex.printStackTrace();
                 }
-              });
-            }
+              }
+            });
           }
-        });
-    } catch (InvocationTargetException ex) {
-      throw new RuntimeException(ex);
-    } catch (InterruptedException ex) {
-      // Ignore saving in case of interruption
-    }
+        }
+      });
   }
 
   /**

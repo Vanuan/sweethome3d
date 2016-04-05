@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package com.eteks.sweethome3d;
+package com.eteks.sweethome3d.swing;
 
 import java.awt.Component;
 import java.awt.ComponentOrientation;
@@ -47,24 +47,23 @@ import javax.swing.JFrame;
 import javax.swing.JRootPane;
 import javax.swing.Timer;
 
+import com.eteks.sweethome3d.HomeFrameController;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.swing.SwingTools;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.HomeView;
-import com.eteks.sweethome3d.viewcontroller.View;
 
 /**
  * A pane that displays a 
  * {@link com.eteks.sweethome3d.swing.HomePane home pane} in a frame.
  * @author Emmanuel Puybaret
  */
-public class HomeFramePane extends JRootPane implements View {
+public class HomeFramePane extends HomeFrameView {
   private static final String FRAME_X_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameX";
   private static final String FRAME_Y_VISUAL_PROPERTY         = "com.eteks.sweethome3d.SweetHome3D.FrameY";
   private static final String FRAME_WIDTH_VISUAL_PROPERTY     = "com.eteks.sweethome3d.SweetHome3D.FrameWidth";
@@ -73,43 +72,71 @@ public class HomeFramePane extends JRootPane implements View {
   private static final String SCREEN_WIDTH_VISUAL_PROPERTY    = "com.eteks.sweethome3d.SweetHome3D.ScreenWidth";
   private static final String SCREEN_HEIGHT_VISUAL_PROPERTY   = "com.eteks.sweethome3d.SweetHome3D.ScreenHeight";
   
-  private final Home                    home;
-  private final HomeApplication         application;
-  private final ContentManager          contentManager;
-  private final HomeFrameController     controller;
-  private static int                    newHomeCount;
-  private int                           newHomeNumber;
+  JRootPane                             rootPane;
+  JFrame                                homeFrame;
   
   public HomeFramePane(Home home,
                        HomeApplication application,
                        ContentManager contentManager, 
-                       HomeFrameController controller) {
-    this.home = home;
-    this.controller = controller;
-    this.application = application;
-    this.contentManager = contentManager;
-    // If home is unnamed, give it a number
-    if (home.getName() == null) {
-      this.newHomeNumber = ++newHomeCount;
-    }
+                       HomeFrameController homeFrameController) {
+    super(home, application, contentManager, homeFrameController);
     // Set controller view as content pane
     HomeView homeView = this.controller.getHomeController().getView();
-    setContentPane((JComponent)homeView);
+    rootPane = new JRootPane();
+    rootPane.setContentPane((JComponent)homeView);
+  }
+
+  @Override
+  protected void showHomeFrame() {
+    homeFrame.setVisible(true);
+  }
+
+  @Override
+  protected void createHomeFrame() {
+    homeFrame = new JFrame() {
+      {
+        // Replace frame rootPane by home controller view
+        setRootPane(HomeFramePane.this.rootPane);
+      }
+    };
   }
 
   /**
-   * Builds and shows the frame that displays this pane.
+   * Enable windows to update their content while window resizing
    */
-  public void displayView() {
-    JFrame homeFrame = new JFrame() {
-      {
-        // Replace frame rootPane by home controller view
-        setRootPane(HomeFramePane.this);
-      }
-    };
-    // Update frame image and title 
-    Image [] frameImages = {new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon.png")).getImage(),
-                            new ImageIcon(HomeFramePane.class.getResource("resources/frameIcon32x32.png")).getImage()};
+  @Override
+  protected void enableAutoResize() {
+    rootPane.getToolkit().setDynamicLayout(true);
+  }
+
+  /**
+   * Set text orientation
+   * needed to support Bi-directional text
+   */
+  @Override
+  protected void setOrientation() {
+    rootPane.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
+  }
+
+  @Override
+  protected void setMenuMacOs() {
+    // The best MVC solution should be to avoid the following statements 
+    // but Mac OS X accepts to display the menu bar of a frame in the screen 
+    // menu bar only if this menu bar depends directly on its root pane  
+    HomeView homeView = this.controller.getHomeController().getView();
+    if (homeView instanceof JRootPane) {
+      JRootPane homePane = (JRootPane)homeView;
+      rootPane.setJMenuBar(homePane.getJMenuBar());
+      homePane.setJMenuBar(null);
+    }
+  }
+
+  @Override
+  protected void setFrameImages(String [] resourceNames) {
+    Image [] frameImages = new Image[resourceNames.length];
+    for (int i=0; i<resourceNames.length; ++i) {
+      frameImages[i] = new ImageIcon(HomeFrameView.class.getResource(resourceNames[i])).getImage();
+    }
     try {
       // Call Java 1.6 setIconImages by reflection
       homeFrame.getClass().getMethod("setIconImages", List.class)
@@ -118,74 +145,51 @@ public class HomeFramePane extends JRootPane implements View {
       // Call setIconImage available in previous versions
       homeFrame.setIconImage(frameImages [0]);
     }
-    updateFrameTitle(homeFrame, this.home, this.application);
-    // Change component orientation
-    applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));    
-    // Compute frame size and location
-    computeFrameBounds(this.home, homeFrame);
-    // Enable windows to update their content while window resizing
-    getToolkit().setDynamicLayout(true); 
-    // The best MVC solution should be to avoid the following statements 
-    // but Mac OS X accepts to display the menu bar of a frame in the screen 
-    // menu bar only if this menu bar depends directly on its root pane  
-    HomeView homeView = this.controller.getHomeController().getView();
-    if (homeView instanceof JRootPane) {
-      JRootPane homePane = (JRootPane)homeView;
-      setJMenuBar(homePane.getJMenuBar());
-      homePane.setJMenuBar(null);
-    }
-    
-    // Add listeners to model and frame    
-    addListeners(this.home, this.application, this.controller.getHomeController(), homeFrame);
-    
-    // Show frame
-    homeFrame.setVisible(true);
   }
   
   /**
    * Adds listeners to <code>frame</code> and model objects.
    */
-  private void addListeners(final Home home,
-                            final HomeApplication application,
-                            final HomeController controller,
-                            final JFrame frame) {
+  @Override
+  protected void addListeners() {
     // Add a listener that keeps track of window location and size
-    frame.addComponentListener(new ComponentAdapter() {
+    homeFrame.addComponentListener(new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent ev) {
           // Store new size only if frame isn't maximized
-          if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
-            controller.setVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY, frame.getWidth());
-            controller.setVisualProperty(FRAME_HEIGHT_VISUAL_PROPERTY, frame.getHeight());
+          if ((homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+            controller.getHomeController().setVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY, homeFrame.getWidth());
+            controller.getHomeController().setVisualProperty(FRAME_HEIGHT_VISUAL_PROPERTY, homeFrame.getHeight());
           }
+
           Dimension userScreenSize = getUserScreenSize();
-          controller.setVisualProperty(SCREEN_WIDTH_VISUAL_PROPERTY, userScreenSize.width);
-          controller.setVisualProperty(SCREEN_HEIGHT_VISUAL_PROPERTY, userScreenSize.height);
+          controller.getHomeController().setVisualProperty(SCREEN_WIDTH_VISUAL_PROPERTY, userScreenSize.width);
+          controller.getHomeController().setVisualProperty(SCREEN_HEIGHT_VISUAL_PROPERTY, userScreenSize.height);
         }
         
         @Override
         public void componentMoved(ComponentEvent ev) {
           // Store new location only if frame isn't maximized
-          if ((frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
-            controller.setVisualProperty(FRAME_X_VISUAL_PROPERTY, frame.getX());
-            controller.setVisualProperty(FRAME_Y_VISUAL_PROPERTY, frame.getY());
+          if ((homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) != JFrame.MAXIMIZED_BOTH) {
+            controller.getHomeController().setVisualProperty(FRAME_X_VISUAL_PROPERTY, homeFrame.getX());
+            controller.getHomeController().setVisualProperty(FRAME_Y_VISUAL_PROPERTY, homeFrame.getY());
           }
         }
       });
     // Control frame closing and activation 
-    frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+    homeFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     WindowAdapter windowListener = new WindowAdapter () {
         private Component mostRecentFocusOwner;
 
         @Override
         public void windowStateChanged(WindowEvent ev) {
-          controller.setVisualProperty(FRAME_MAXIMIZED_VISUAL_PROPERTY, 
-              (frame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH);
+          controller.getHomeController().setVisualProperty(FRAME_MAXIMIZED_VISUAL_PROPERTY, 
+              (homeFrame.getExtendedState() & JFrame.MAXIMIZED_BOTH) == JFrame.MAXIMIZED_BOTH);
         }
         
         @Override
         public void windowClosing(WindowEvent ev) {
-          controller.close();
+          controller.getHomeController().close();
         }
         
         @Override
@@ -194,7 +198,7 @@ public class HomeFramePane extends JRootPane implements View {
           // while canvases 3D are created in a child modal dialog like the one managing 
           // ImportedFurnitureWizardStepsPanel. As this makes Swing loose the most recent focus owner
           // let's store it in a field to use it when this frame will be reactivated. 
-          Component mostRecentFocusOwner = frame.getMostRecentFocusOwner();          
+          Component mostRecentFocusOwner = homeFrame.getMostRecentFocusOwner();          
           if (!(mostRecentFocusOwner instanceof JFrame)
               && mostRecentFocusOwner != null) {
             this.mostRecentFocusOwner = mostRecentFocusOwner;
@@ -214,25 +218,25 @@ public class HomeFramePane extends JRootPane implements View {
           }
         } 
       };
-    frame.addWindowListener(windowListener);    
-    frame.addWindowStateListener(windowListener);    
+    homeFrame.addWindowListener(windowListener);
+    homeFrame.addWindowStateListener(windowListener);
     // Add a listener to preferences to apply component orientation to frame matching current language
     application.getUserPreferences().addPropertyChangeListener(UserPreferences.Property.LANGUAGE, 
-        new LanguageChangeListener(frame, this));
+        new LanguageChangeListener(homeFrame, this));
     // Dispose window when a home is deleted 
     application.addHomesListener(new CollectionListener<Home>() {
         public void collectionChanged(CollectionEvent<Home> ev) {
           if (ev.getItem() == home
               && ev.getType() == CollectionEvent.Type.DELETE) {
             application.removeHomesListener(this);
-            frame.dispose();
+            homeFrame.dispose();
           }
         };
       });
     // Update title when the name or the modified state of home changes
     PropertyChangeListener frameTitleChangeListener = new PropertyChangeListener () {
         public void propertyChange(PropertyChangeEvent ev) {
-          updateFrameTitle(frame, home, application);
+          updateFrameTitle();
         }
       };
     home.addPropertyChangeListener(Home.Property.NAME, frameTitleChangeListener);
@@ -262,7 +266,7 @@ public class HomeFramePane extends JRootPane implements View {
             UserPreferences.Property.LANGUAGE, this);
       } else {
         this.frame.get().applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
-        homeFramePane.updateFrameTitle(this.frame.get(), homeFramePane.home, homeFramePane.application);
+        homeFramePane.updateFrameTitle();
       }
     }
   }
@@ -270,7 +274,8 @@ public class HomeFramePane extends JRootPane implements View {
   /**
    * Computes <code>frame</code> size and location to fit into screen.
    */
-  private void computeFrameBounds(Home home, final JFrame frame) {
+  @Override
+  protected void computeFrameBounds() {
     Integer x = (Integer)home.getVisualProperty(FRAME_X_VISUAL_PROPERTY);
     Integer y = (Integer)home.getVisualProperty(FRAME_Y_VISUAL_PROPERTY);
     Integer width = (Integer)home.getVisualProperty(FRAME_WIDTH_VISUAL_PROPERTY);
@@ -289,37 +294,37 @@ public class HomeFramePane extends JRootPane implements View {
       final Rectangle frameBounds = new Rectangle(x, y, width, height);
       if (maximized != null && maximized) {
         // Display first the frame at its maximum size to keep splitters location 
-        Insets insets = frame.getInsets();
-        frame.setSize(screenSize.width + insets.left + insets.right, 
+        Insets insets = homeFrame.getInsets();
+        homeFrame.setSize(screenSize.width + insets.left + insets.right,
             screenSize.height + insets.bottom);
         EventQueue.invokeLater(new Runnable() {
             public void run() {
               // Resize to home non maximized bounds
-              frame.setBounds(frameBounds);
+              homeFrame.setBounds(frameBounds);
               // Finally maximize
               if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
                 new Timer(200, new ActionListener() {
                     public void actionPerformed(ActionEvent ev) {
                       // Maximize later otherwise it won't be taken into account
                       ((Timer)ev.getSource()).stop();
-                      frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                      homeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                     }
                   }).start();
               } else {
-                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                homeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
               }
             }
           });
       } else {
         // Reuse home bounds
-        frame.setBounds(frameBounds);
-        frame.setLocationByPlatform(!SwingTools.isRectangleVisibleAtScreen(frameBounds));
+        homeFrame.setBounds(frameBounds);
+        homeFrame.setLocationByPlatform(!SwingTools.isRectangleVisibleAtScreen(frameBounds));
       }
     } else {      
-      frame.setLocationByPlatform(true);
-      frame.pack();
-      frame.setSize(Math.min(screenSize.width * 4 / 5, frame.getWidth()), 
-              Math.min(screenSize.height * 4 / 5, frame.getHeight()));
+      homeFrame.setLocationByPlatform(true);
+      homeFrame.pack();
+      homeFrame.setSize(Math.min(screenSize.width * 4 / 5, homeFrame.getWidth()), 
+              Math.min(screenSize.height * 4 / 5, homeFrame.getHeight()));
     }
   }
 
@@ -327,71 +332,50 @@ public class HomeFramePane extends JRootPane implements View {
    * Returns the screen size available to user. 
    */
   private Dimension getUserScreenSize() {
-    Dimension screenSize = getToolkit().getScreenSize();
-    Insets screenInsets = getToolkit().getScreenInsets(getGraphicsConfiguration());
+    Dimension screenSize = rootPane.getToolkit().getScreenSize();
+    Insets screenInsets = rootPane.getToolkit().getScreenInsets(rootPane.getGraphicsConfiguration());
     screenSize.width -= screenInsets.left + screenInsets.right;
     screenSize.height -= screenInsets.top + screenInsets.bottom;
     return screenSize;
   }
   
-  /**
-   * Updates <code>frame</code> title from <code>home</code> and <code>application</code> name.
-   */
-  private void updateFrameTitle(JFrame frame, 
-                                Home home,
-                                HomeApplication application) {
-    String homeName = home.getName();
-    String homeDisplayedName;
-    if (homeName == null) {
-      homeDisplayedName = application.getUserPreferences().getLocalizedString(HomeFramePane.class, "untitled"); 
-      if (newHomeNumber > 1) {
-        homeDisplayedName += " " + newHomeNumber;
-      }
-    } else {
-      homeDisplayedName = this.contentManager.getPresentationName(
-          homeName, ContentManager.ContentType.SWEET_HOME_3D);
-    }
+  protected void updateMacOsTitle(String homeName) {
+    // Use black indicator in close icon for a modified home 
+    Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
+    // Set Mac OS X 10.4 property for backward compatibility
+    rootPane.putClientProperty("windowModified", homeModified);
     
-    if (home.isRecovered()) {
-      homeDisplayedName += " " + application.getUserPreferences().getLocalizedString(HomeFramePane.class, "recovered");
-    }
-    
-    String title = homeDisplayedName;
-    if (OperatingSystem.isMacOSX()) {
-      // Use black indicator in close icon for a modified home 
-      Boolean homeModified = Boolean.valueOf(home.isModified() || home.isRecovered());
-      // Set Mac OS X 10.4 property for backward compatibility
-      putClientProperty("windowModified", homeModified);
+    if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
+      rootPane.putClientProperty("Window.documentModified", homeModified);
       
-      if (OperatingSystem.isMacOSXLeopardOrSuperior()) {
-        putClientProperty("Window.documentModified", homeModified);
-        
-        if (homeName != null) {        
-          File homeFile = new File(homeName);
-          if (homeFile.exists()) {
-            // Update the home icon in window title bar for home files
-            putClientProperty("Window.documentFile", homeFile);
-          }
+      if (homeName != null) {        
+        File homeFile = new File(homeName);
+        if (homeFile.exists()) {
+          // Update the home icon in window title bar for home files
+          rootPane.putClientProperty("Window.documentFile", homeFile);
         }
-      }
-
-      if (!frame.isVisible() 
-          && OperatingSystem.isMacOSXLionOrSuperior()) {
-        try {
-          // Call Mac OS X specific FullScreenUtilities.setWindowCanFullScreen(homeFrame, true) by reflection 
-          Class.forName("com.apple.eawt.FullScreenUtilities").
-              getMethod("setWindowCanFullScreen", new Class<?> [] {Window.class, boolean.class}).
-              invoke(null, frame, true);
-        } catch (Exception ex) {
-          // Full screen mode is not supported
-        }
-      }
-    } else {
-      title += " - " + application.getName(); 
-      if (home.isModified() || home.isRecovered()) {
-        title = "* " + title;
       }
     }
-    frame.setTitle(title);
+
+    if (!homeFrame.isVisible() 
+        && OperatingSystem.isMacOSXLionOrSuperior()) {
+      try {
+        // Call Mac OS X specific FullScreenUtilities.setWindowCanFullScreen(homeFrame, true) by reflection 
+        Class.forName("com.apple.eawt.FullScreenUtilities").
+            getMethod("setWindowCanFullScreen", new Class<?> [] {Window.class, boolean.class}).
+            invoke(null, homeFrame, true);
+      } catch (Exception ex) {
+        // Full screen mode is not supported
+      }
+    }
+  }
+
+  public Object getObject() {
+    return homeFrame;
+  }
+
+  @Override
+  protected void setTitle(String title) {
+    homeFrame.setTitle(title);
   }
 }

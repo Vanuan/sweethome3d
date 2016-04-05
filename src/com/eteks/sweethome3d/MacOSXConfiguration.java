@@ -53,6 +53,7 @@ import com.apple.eawt.ApplicationEvent;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
+import com.eteks.sweethome3d.model.HomeApplication;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.HomePane;
 import com.eteks.sweethome3d.swing.ResourceAction;
@@ -72,7 +73,7 @@ class MacOSXConfiguration {
   /**
    * Binds <code>homeApplication</code> to Mac OS X application menu.
    */
-  public static void bindToApplicationMenu(final SweetHome3D homeApplication) {
+  public static void bindToApplicationMenu(final HomeApplication homeApplication) {
     final Application macosxApplication = Application.getApplication();
     // Create a default controller for an empty home and disable unrelated actions
     final HomeController defaultController = 
@@ -197,7 +198,7 @@ class MacOSXConfiguration {
     homeApplication.addHomesListener(new CollectionListener<Home>() {
       public void collectionChanged(CollectionEvent<Home> ev) {
         if (ev.getType() == CollectionEvent.Type.ADD) {
-          final JFrame homeFrame = homeApplication.getHomeFrame(ev.getItem());
+          final JFrame homeFrame = (JFrame) homeApplication.getHomeFrame(ev.getItem());
           if (!Boolean.getBoolean("com.eteks.sweethome3d.no3D")) {
             // To avoid a possible freeze of the program when the user requests a window enlargement 
             // while the frame canvas 3D is instantiated, forbid window to be resized
@@ -263,7 +264,7 @@ class MacOSXConfiguration {
                   defaultFrame.setVisible(false);
                   defaultFrame.setVisible(true);
                   if (homes.size() > 0) {
-                    homeApplication.getHomeFrame(homes.get(0)).toFront();
+                    ((JFrame) homeApplication.getHomeFrame(homes.get(0))).toFront();
                     defaultFrame.setVisible(false);
                   }
                 }
@@ -289,7 +290,7 @@ class MacOSXConfiguration {
   /**
    * Returns a dummy frame used to display the default menu bar.
    */
-  private static JFrame createDummyFrameWithDefaultMenuBar(final SweetHome3D homeApplication,
+  private static JFrame createDummyFrameWithDefaultMenuBar(final HomeApplication homeApplication,
                                                            final HomePane defaultHomeView, 
                                                            final JMenuBar defaultMenuBar) {
     final JFrame frame = new JFrame();
@@ -314,7 +315,7 @@ class MacOSXConfiguration {
    */
   private static void addWindowMenu(final JFrame frame, 
                                     final JMenuBar menuBar, 
-                                    final SweetHome3D homeApplication,
+                                    final HomeApplication homeApplication,
                                     boolean defaultFrame) {
     UserPreferences preferences = homeApplication.getUserPreferences();
     final JMenu windowMenu = new JMenu(
@@ -347,7 +348,7 @@ class MacOSXConfiguration {
               // Avoid blinking while bringing other windows to front
               frame.setAlwaysOnTop(true);
               for (Home home : homeApplication.getHomes()) {
-                JFrame applicationFrame = homeApplication.getHomeFrame(home);
+                JFrame applicationFrame = (JFrame) homeApplication.getHomeFrame(home);
                 if (applicationFrame != frame
                     && applicationFrame.getState() != JFrame.ICONIFIED) {
                   applicationFrame.setFocusableWindowState(false);
@@ -364,7 +365,7 @@ class MacOSXConfiguration {
           boolean firstMenuItem = true;
           // Fill menu dynamically with a menu item for the frame of each application home
           for (Home home : homeApplication.getHomes()) {
-            final JFrame applicationFrame = homeApplication.getHomeFrame(home);
+            final JFrame applicationFrame = (JFrame)homeApplication.getHomeFrame(home);
             JCheckBoxMenuItem windowMenuItem = new JCheckBoxMenuItem(
                 new AbstractAction(applicationFrame.getTitle()) {
                     public void actionPerformed(ActionEvent ev) {

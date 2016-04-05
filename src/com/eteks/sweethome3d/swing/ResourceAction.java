@@ -19,7 +19,10 @@
  */
 package com.eteks.sweethome3d.swing;
 
+import java.awt.Button;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
@@ -138,7 +141,8 @@ public class ResourceAction extends AbstractAction {
     
     String mnemonicKey = getOptionalString(preferences, resourceClass, propertyPrefix + MNEMONIC_KEY, false);
     if (mnemonicKey != null) {
-      putValue(MNEMONIC_KEY, Integer.valueOf(KeyStroke.getKeyStroke(mnemonicKey).getKeyCode()));
+      int keyCode = mnemonicKey.charAt(0);
+      putValue(MNEMONIC_KEY, Integer.valueOf(keyCode));
     }
   }
 

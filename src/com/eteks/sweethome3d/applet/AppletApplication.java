@@ -31,6 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.AccessControlException;
@@ -187,7 +188,7 @@ public class AppletApplication extends HomeApplication {
 
     addComponent3DRenderingErrorObserver();
     
-    EventQueue.invokeLater(new Runnable() {
+    asyncExec(new Runnable() {
         public void run() {
           // Create a home in Event Dispatch Thread 
           addHome(createHome());
@@ -616,7 +617,7 @@ public class AppletApplication extends HomeApplication {
           getURLWithCodeBase(codeBase, readPreferencesURL), 
           new Executor() {
               public void execute(Runnable command) {
-                EventQueue.invokeLater(command);
+                asyncExec(command);
               }
             },
           userLanguage);
@@ -706,7 +707,7 @@ public class AppletApplication extends HomeApplication {
             new Component3DManager.RenderingErrorObserver() {
               public void errorOccured(int errorCode, String errorMessage) {
                 System.err.print("Error in Java 3D : " + errorCode + " " + errorMessage);
-                EventQueue.invokeLater(new Runnable() {
+                asyncExec(new Runnable() {
                     public void run() {
                       show3DError();
                     }
@@ -809,5 +810,21 @@ public class AppletApplication extends HomeApplication {
     public boolean isWebBrowserSupported() {
       return true;
     }
+  }
+
+  @Override
+  public void syncExec(Runnable runnable) {
+    try{
+      EventQueue.invokeAndWait(runnable);
+    } catch (InvocationTargetException ex) {
+      throw new RuntimeException(ex);
+    } catch (InterruptedException ex) {
+      // Ignore in case of interruption
+    }
+  }
+
+  @Override
+  public void asyncExec(Runnable runnable) {
+    EventQueue.invokeLater(runnable);
   }
 }

@@ -4309,4 +4309,8 @@ public class HomePane extends JRootPane implements HomeView {
   private abstract interface SelectableFormat<T extends Selectable> {
     public abstract String format(T item);
   }
+
+  public Object getObject() {
+    return this;
+  }
 }

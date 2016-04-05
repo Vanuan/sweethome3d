@@ -25,15 +25,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
@@ -46,22 +40,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import javax.jnlp.BasicService;
 import javax.jnlp.ServiceManager;
-import javax.jnlp.ServiceManagerStub;
 import javax.jnlp.SingleInstanceListener;
 import javax.jnlp.SingleInstanceService;
 import javax.jnlp.UnavailableServiceException;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+
 
 import com.eteks.sweethome3d.io.AutoRecoveryManager;
 import com.eteks.sweethome3d.io.FileUserPreferences;
@@ -83,6 +74,7 @@ import com.eteks.sweethome3d.swing.SwingViewFactory;
 import com.eteks.sweethome3d.tools.OperatingSystem;
 import com.eteks.sweethome3d.viewcontroller.ContentManager;
 import com.eteks.sweethome3d.viewcontroller.HomeController;
+import com.eteks.sweethome3d.viewcontroller.HomeFrameView;
 import com.eteks.sweethome3d.viewcontroller.View;
 import com.eteks.sweethome3d.viewcontroller.ViewFactory;
 
@@ -246,7 +238,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns a content manager able to handle files.
    */
-  protected ContentManager getContentManager() {
+  public ContentManager getContentManager() {
     if (this.contentManager == null) {
       this.contentManager = new FileContentManagerWithRecordedLastDirectories(getUserPreferences(), getClass());
     }
@@ -256,7 +248,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns a Swing view factory.
    */
-  protected ViewFactory getViewFactory() {
+  public ViewFactory getViewFactory() {
     if (this.viewFactory == null) {
       this.viewFactory = new SwingViewFactory();
     }
@@ -266,7 +258,7 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns the plugin manager of this application.
    */
-  protected PluginManager getPluginManager() {
+  public PluginManager getPluginManager() {
     if (!this.pluginManagerInitialized) {
       try {
         UserPreferences userPreferences = getUserPreferences();
@@ -323,15 +315,15 @@ public class SweetHome3D extends HomeApplication {
   /**
    * Returns the frame that displays a given <code>home</code>.
    */
-  JFrame getHomeFrame(Home home) {
+  public JFrame getHomeFrame(Home home) {
     return this.homeFrames.get(home);
   }
 
   /**
    * Shows and brings to front <code>home</code> frame.
    */
-  private void showHomeFrame(Home home) {
-    final JFrame homeFrame = getHomeFrame(home);
+  protected void showHomeFrame(Home home) {
+    final JFrame homeFrame = (JFrame)getHomeFrame(home);
     homeFrame.setVisible(true);
     homeFrame.setState(JFrame.NORMAL);
     homeFrame.toFront();
@@ -362,7 +354,7 @@ public class SweetHome3D extends HomeApplication {
         // Display splash screen
         SwingTools.showSplashScreenWindow(SweetHome3D.class.getResource("resources/splashScreen.jpg"));
         // Create JNLP services required by Sweet Home 3D
-        ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass()));
+        ServiceManager.setServiceManagerStub(new StandaloneServiceManager(getClass(), StandaloneBasicServiceAWT.class));
       }
     }
 
@@ -405,7 +397,7 @@ public class SweetHome3D extends HomeApplication {
                 addNewHomeCloseListener(home, controller.getHomeController());
               }
 
-              JFrame homeFrame = (JFrame)SwingUtilities.getRoot((JComponent) controller.getView());
+              JFrame homeFrame = (JFrame)((HomeFrameView)controller.getView()).getObject();
               homeFrames.put(home, homeFrame);
             } catch (IllegalStateException ex) {
               // Check exception by class name to avoid a mandatory bind to Java 3D
@@ -469,14 +461,6 @@ public class SweetHome3D extends HomeApplication {
         SweetHome3D.this.start(args);
       }
     });
-  }
-
-  /**
-   * Returns a new instance of a home frame controller after <code>home</code>
-   * was created.
-   */
-  protected HomeFrameController createHomeFrameController(Home home) {
-    return new HomeFrameController(home, this, getViewFactory(), getContentManager(), getPluginManager());
   }
 
   /**
@@ -594,7 +578,7 @@ public class SweetHome3D extends HomeApplication {
         if (home.isModified()) {
           String homeName = home.getName();
           if (homeName == null) {
-            JFrame homeFrame = getHomeFrame(home);
+            JFrame homeFrame = (JFrame) getHomeFrame(home);
             homeFrame.toFront();
             homeName = contentManager.showSaveDialog((View) homeFrame.getRootPane(), null,
                 ContentManager.ContentType.SWEET_HOME_3D, null);
@@ -649,90 +633,85 @@ public class SweetHome3D extends HomeApplication {
   }
 
   /**
+   * If the home with homeName is already opened, show it.
+   * 
+   * @param homeName
+   * @return true if the home is already opened
+   */
+  protected boolean showOpenedFrame(String homeName) {
+    for (Home home : getHomes()) {
+      if (homeName.equals(home.getName())) {
+        showHomeFrame(home);
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  /**
    * Starts application once initialized and opens home passed in arguments. 
    * This method is executed from Event Dispatch Thread.
    */
-  protected void start(String [] args) {
+  public void start(String [] args) {
     if (args.length == 2 && args [0].equals("-open") && args [1].length() > 0) {
       // If requested home is already opened, show it
-      for (Home home : getHomes()) {
-        if (args [1].equals(home.getName())) {
-          showHomeFrame(home);
-          return;
-        }
-      }
-      
-      if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.SWEET_HOME_3D)) {
-        // Add a listener to application to recover homes once the one in parameter is open
-        addHomesListener(new CollectionListener<Home>() {
-            public void collectionChanged(CollectionEvent<Home> ev) {
-              if (ev.getType() == CollectionEvent.Type.ADD) {
-                removeHomesListener(this);
-                if (autoRecoveryManager != null) {
-                  autoRecoveryManager.openRecoveredHomes();
-                }
-              }
-            }
-          });
-        // Read home file in args [1] if args [0] == "-open" with a dummy controller
-        createHomeFrameController(createHome()).getHomeController().open(args [1]);
-        checkUpdates();
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.LANGUAGE_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String languageLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            List<String> supportedLanguages = Arrays.asList(getUserPreferences().getSupportedLanguages());
-            // Import language library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importLanguageLibrary(languageLibraryName);
-            // Switch to the first language added to supported languages
-            for (String language : getUserPreferences().getSupportedLanguages()) {
-              if (!supportedLanguages.contains(language)) {
-                getUserPreferences().setLanguage(language);
-                break;
-              }
-            }
-            checkUpdates();
-          }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.FURNITURE_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String furnitureLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import furniture library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importFurnitureLibrary(furnitureLibraryName);
-            checkUpdates();
-          }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.TEXTURES_LIBRARY)) {
-        showDefaultHomeFrame();
-        final String texturesLibraryName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import textures library with a dummy controller
-            createHomeFrameController(createHome()).getHomeController().importTexturesLibrary(texturesLibraryName);
-            checkUpdates();
-          }
-        });
-      } else if (getContentManager().isAcceptable(args [1], ContentManager.ContentType.PLUGIN)) {
-        showDefaultHomeFrame();
-        final String pluginName = args [1];
-        EventQueue.invokeLater(new Runnable() {
-          public void run() {
-            // Import plug-in with a dummy controller
-            HomeController homeController = createHomeFrameController(createHome()).getHomeController();
-            if (homeController instanceof HomePluginController) {
-              ((HomePluginController)homeController).importPlugin(pluginName);
-            }
-            checkUpdates();
-          }
-        });
+      if (!showOpenedFrame(args [1])) {
+        openFile(args [1]);
       }
     } else { 
       showDefaultHomeFrame();
       checkUpdates();
     }
+  }
+
+  private void openFile(String filename) {
+    HomeController homeController = createHomeFrameController(createHome()).getHomeController();
+    if (getContentManager().isAcceptable(filename, ContentManager.ContentType.SWEET_HOME_3D)) {
+      // Add a listener to application to recover homes once the one in parameter is open
+      addHomesListener(new CollectionListener<Home>() {
+          public void collectionChanged(CollectionEvent<Home> ev) {
+            if (ev.getType() == CollectionEvent.Type.ADD) {
+              removeHomesListener(this);
+              if (autoRecoveryManager != null) {
+                autoRecoveryManager.openRecoveredHomes();
+              }
+            }
+          }
+        });
+      // Read home file with a dummy controller
+      homeController.open(filename);
+    } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.LANGUAGE_LIBRARY)) {
+      showDefaultHomeFrame();
+      final String languageLibraryName = filename;
+      List<String> supportedLanguages = Arrays.asList(getUserPreferences().getSupportedLanguages());
+      // Import language library with a dummy controller
+      homeController.importLanguageLibrary(languageLibraryName);
+      // Switch to the first language added to supported languages
+      for (String language : getUserPreferences().getSupportedLanguages()) {
+        if (!supportedLanguages.contains(language)) {
+          getUserPreferences().setLanguage(language);
+          break;
+        }
+      }
+    } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.FURNITURE_LIBRARY)) {
+      showDefaultHomeFrame();
+      final String furnitureLibraryName = filename;
+      // Import furniture library with a dummy controller
+      homeController.importFurnitureLibrary(furnitureLibraryName);
+    } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.TEXTURES_LIBRARY)) {
+      showDefaultHomeFrame();
+      final String texturesLibraryName = filename;
+      // Import textures library with a dummy controller
+      createHomeFrameController(createHome()).getHomeController().importTexturesLibrary(texturesLibraryName);
+    } else if (getContentManager().isAcceptable(filename, ContentManager.ContentType.PLUGIN)) {
+      showDefaultHomeFrame();
+      final String pluginName = filename;
+      // Import plug-in with a dummy controller
+      if (homeController instanceof HomePluginController) {
+        ((HomePluginController)homeController).importPlugin(pluginName);
+      }
+    }
+    checkUpdates();
   }
 
   /**
@@ -752,7 +731,7 @@ public class SweetHome3D extends HomeApplication {
       final List<Home> homes = getHomes();
       Home home = null;
       for (int i = homes.size() - 1; i >= 0; i--) {
-        JFrame homeFrame = getHomeFrame(homes.get(i));
+        JFrame homeFrame = (JFrame) getHomeFrame(homes.get(i));
         if (homeFrame.isActive() || homeFrame.getState() != JFrame.ICONIFIED) {
           home = homes.get(i);
           break;
@@ -761,7 +740,7 @@ public class SweetHome3D extends HomeApplication {
       // If no frame is visible and not iconified, take any displayable frame
       if (home == null) {
         for (int i = homes.size() - 1; i >= 0; i--) {
-          JFrame homeFrame = getHomeFrame(homes.get(i));
+          JFrame homeFrame = (JFrame) getHomeFrame(homes.get(i));
           if (homeFrame.isDisplayable()) {
             home = homes.get(i);
             break;
@@ -850,41 +829,11 @@ public class SweetHome3D extends HomeApplication {
   }
   
   /**
-   * JNLP <code>ServiceManagerStub</code> implementation for standalone
-   * applications run out of Java Web Start. This service manager supports
-   * <code>BasicService</code> and <code>javax.jnlp.SingleInstanceService</code>.
-   * .
-   */
-  private static class StandaloneServiceManager implements ServiceManagerStub {
-    private final Class<? extends SweetHome3D> mainClass;
-
-    public StandaloneServiceManager(Class<? extends SweetHome3D> mainClass) {
-      this.mainClass = mainClass;
-    }
-
-    public Object lookup(final String name) throws UnavailableServiceException {
-      if (name.equals("javax.jnlp.BasicService")) {
-        // Create a basic service that uses Java SE 6 java.awt.Desktop class
-        return new StandaloneBasicService();
-      } else if (name.equals("javax.jnlp.SingleInstanceService")) {
-        // Create a server that waits for further Sweet Home 3D launches
-        return new StandaloneSingleInstanceService(this.mainClass);
-      } else {
-        throw new UnavailableServiceException(name);
-      }
-    }
-
-    public String [] getServiceNames() {
-      return new String [] {"javax.jnlp.BasicService", "javax.jnlp.SingleInstanceService"};
-    }
-  }
-
-  /**
    * <code>BasicService</code> that launches web browser either with Java SE 6
    * <code>java.awt.Desktop</code> class, or with the <code>open</code> command
    * under Mac OS X.
    */
-  private static class StandaloneBasicService implements BasicService {
+  private static class StandaloneBasicServiceAWT implements BasicService {
     public boolean showDocument(URL url) {
       try {
         if (OperatingSystem.isJavaVersionGreaterOrEqual("1.6")) {
@@ -942,123 +891,20 @@ public class SweetHome3D extends HomeApplication {
     }
   }
 
-  /**
-   * A single instance service server that waits for further Sweet Home 3D
-   * launches.
-   */
-  private static class StandaloneSingleInstanceService implements SingleInstanceService {
-    private static final String                SINGLE_INSTANCE_PORT    = "singleInstancePort";
-
-    private final Class<? extends SweetHome3D> mainClass;
-    private final List<SingleInstanceListener> singleInstanceListeners = new ArrayList<SingleInstanceListener>();
-
-    public StandaloneSingleInstanceService(Class<? extends SweetHome3D> mainClass) {
-      this.mainClass = mainClass;
-    }
-
-    public void addSingleInstanceListener(SingleInstanceListener l) {
-      if (this.singleInstanceListeners.isEmpty()) {
-        if (!OperatingSystem.isMacOSX()) {
-          // Launching a server is useless under Mac OS X because further launches will be notified 
-          // by com.apple.eawt.ApplicationListener added to application in MacOSXConfiguration class
-          launchSingleInstanceServer();
-        }
-      }
-      this.singleInstanceListeners.add(l);
-    }
-
-    /**
-     * Launches single instance server.
-     */
-    private void launchSingleInstanceServer() {
-      final ServerSocket serverSocket;
-      try {
-        // Launch a server that waits for other Sweet Home 3D launches
-        serverSocket = new ServerSocket(0, 0, InetAddress.getByName("127.0.0.1"));
-        // Share server port in preferences
-        Preferences preferences = Preferences.userNodeForPackage(this.mainClass);
-        preferences.putInt(SINGLE_INSTANCE_PORT, serverSocket.getLocalPort());
-        preferences.flush();
-      } catch (IOException ex) {
-        // Ignore exception, Sweet Home 3D will work with multiple instances
-        return;
-      } catch (BackingStoreException ex) {
-        // Ignore exception, Sweet Home 3D will work with multiple instances
-        return;
-      }
-
-      Executors.newSingleThreadExecutor().execute(new Runnable() {
-        public void run() {
-          try {
-            while (true) {
-              // Wait client calls
-              Socket socket = serverSocket.accept();
-              // Read client params
-              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-              String [] params = reader.readLine().split("\t");
-              reader.close();
-              socket.close();
-
-              // Work on a copy of singleInstanceListeners to ensure a listener
-              // can modify safely listeners list
-              SingleInstanceListener [] listeners = singleInstanceListeners
-                  .toArray(new SingleInstanceListener [singleInstanceListeners.size()]);
-              // Call listeners with received params
-              for (SingleInstanceListener listener : listeners) {
-                listener.newActivation(params);
-              }
-            }
-          } catch (IOException ex) {
-            // In case of problem, relaunch server
-            launchSingleInstanceServer();
-          }
-        }
-      });
-    }
-
-    public void removeSingleInstanceListener(SingleInstanceListener l) {
-      this.singleInstanceListeners.remove(l);
-      if (this.singleInstanceListeners.isEmpty()) {
-        Preferences preferences = Preferences.userNodeForPackage(this.mainClass);
-        preferences.remove(SINGLE_INSTANCE_PORT);
-        try {
-          preferences.flush();
-        } catch (BackingStoreException ex) {
-          throw new RuntimeException(ex);
-        }
-      }
-    }
-
-    /**
-     * Returns <code>true</code> if single instance server was successfully
-     * called.
-     */
-    public static boolean callSingleInstanceServer(String [] mainArgs, Class<? extends SweetHome3D> mainClass) {
-      if (!OperatingSystem.isMacOSX()) {
-        // No server under Mac OS X, multiple application launches are managed
-        // by com.apple.eawt.ApplicationListener in MacOSXConfiguration class
-        Preferences preferences = Preferences.userNodeForPackage(mainClass);
-        int singleInstancePort = preferences.getInt(SINGLE_INSTANCE_PORT, -1);
-        if (singleInstancePort != -1) {
-          try {
-            // Try to connect to single instance server
-            Socket socket = new Socket("127.0.0.1", singleInstancePort);
-            // Write main args
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-            for (String arg : mainArgs) {
-              writer.write(arg);
-              writer.write("\t");
-            }
-            writer.write("\n");
-            writer.close();
-            socket.close();
-            return true;
-          } catch (IOException ex) {
-            // Return false
-          }
-        }
-      }
-      return false;
+  @Override
+  public void syncExec(Runnable runnable) {
+    try{
+      EventQueue.invokeAndWait(runnable);
+    } catch (InvocationTargetException ex) {
+      throw new RuntimeException(ex);
+    } catch (InterruptedException ex) {
+      // Ignore in case of interruption
     }
   }
+
+  @Override
+  public void asyncExec(Runnable runnable) {
+    EventQueue.invokeLater(runnable);
+  }
+
 }
