@@ -32,11 +32,22 @@ import com.eteks.sweethome3d.model.Content;
  * URL content for files, images...
  * @author Emmanuel Puybaret
  */
-public class TemporaryURLContent extends URLContent {
+public class TemporaryURLContent implements Content {
   private static final long serialVersionUID = 1L;
 
+  private final URLContent delegate;
+
   public TemporaryURLContent(URL temporaryUrl) {
-    super(temporaryUrl);
+    this.delegate = new URLContent(temporaryUrl);
+  }
+
+  @Override 
+  public InputStream openStream() throws IOException {
+    return delegate.openStream();
+  }
+
+  public URL getURL() {
+    return delegate.getURL();
   }
 
   /**
